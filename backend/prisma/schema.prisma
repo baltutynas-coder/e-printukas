@@ -1,0 +1,167 @@
+// Prisma schema — e.printukas.lt duomenų bazės struktūra
+// Dokumentacija: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ADMIN VARTOTOJAS (tik vidinis, klientai nesijungia)
+// ============================================
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hash
+  name      String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+enum Role {
+  ADMIN       // Pilna prieiga
+  MANAGER     // Produktai + užsakymai
+}
+
+// ============================================
+// PRODUKTŲ KATEGORIJOS
+// ============================================
+model Category {
+  id       String     @id @default(cuid())
+  name     String
+  slug     String     @unique
+  image    String?
+  parentId String?    @map("parent_id")
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+  sortOrder Int       @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("categories")
+}
+
+// ============================================
+// PRODUKTAI
+// ============================================
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  comparePrice Decimal? @db.Decimal(10, 2) @map("compare_price") // Sena kaina (perbraukta)
+  sku         String?  @unique
+  published   Boolean  @default(false)
+
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  images   ProductImage[]
+  variants ProductVariant[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}
+
+// Produkto nuotraukos
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  sortOrder Int     @default(0) @map("sort_order")
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// Produkto variantai (spalva + dydis + kiekis)
+model ProductVariant {
+  id        String  @id @default(cuid())
+  color     String?
+  colorHex  String? @map("color_hex") // #FF0000
+  size      String?
+  stock     Int     @default(0)
+  sku       String? @unique
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+
+  @@map("product_variants")
+}
+
+// ============================================
+// UŽSAKYMAI (klientai perka be registracijos)
+// ============================================
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique @map("order_number") // EPR-00001
+  status        OrderStatus @default(PENDING)
+
+  // Kliento info (be registracijos)
+  customerEmail String @map("customer_email")
+  customerName  String @map("customer_name")
+  customerPhone String? @map("customer_phone")
+
+  // Pristatymo adresas
+  shippingAddress String @map("shipping_address") @db.Text
+  shippingCity    String @map("shipping_city")
+  shippingZip     String @map("shipping_zip")
+  shippingCountry String @default("LT") @map("shipping_country")
+
+  // Sumos
+  subtotal     Decimal @db.Decimal(10, 2)
+  shippingCost Decimal @default(0) @db.Decimal(10, 2) @map("shipping_cost")
+  total        Decimal @db.Decimal(10, 2)
+
+  // Mokėjimas
+  stripePaymentId String? @map("stripe_payment_id")
+  paidAt          DateTime? @map("paid_at")
+
+  items     OrderItem[]
+  notes     String?     @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING     // Laukia mokėjimo
+  PAID        // Apmokėta
+  PROCESSING  // Ruošiama
+  SHIPPED     // Išsiųsta
+  DELIVERED   // Pristatyta
+  CANCELLED   // Atšaukta
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2) // Kaina užsakymo metu
+
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+
+  variantId String? @map("variant_id")
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
+}

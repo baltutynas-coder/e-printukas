@@ -1,0 +1,10 @@
+node_modules/
+.env
+.DS_Store
+*.log
+dist/
+.next/
+frontend/public/images/*.jpg
+frontend/public/images/*.png
+frontend/public/images/*.webp
+!frontend/public/images/.gitkeep

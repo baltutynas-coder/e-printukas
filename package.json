@@ -1,0 +1,15 @@
+{
+  "name": "e-printukas",
+  "version": "1.0.0",
+  "description": "e.printukas.lt - elektroninė parduotuvė",
+  "private": true,
+  "scripts": {
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
