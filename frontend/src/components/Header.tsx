@@ -62,7 +62,7 @@ export default function Header() {
   };
 
   const handleMenuLeave = () => {
-    menuTimeout.current = setTimeout(() => setActiveMenu(null), 200);
+    menuTimeout.current = setTimeout(() => setActiveMenu(null), 300);
   };
 
   return (
@@ -90,7 +90,7 @@ export default function Header() {
               </span>
             </Link>
 
-            <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+            <nav className="hidden lg:flex items-center gap-0 flex-1 justify-center">
               {menuCategories.map((cat) => (
                 <div
                   key={cat.slug}
@@ -100,7 +100,7 @@ export default function Header() {
                 >
                   <Link
                     href={`/kategorija/${cat.slug}`}
-                    className={`px-3 py-4 text-sm font-medium transition-colors ${
+                    className={`block px-3 py-5 text-sm font-medium transition-colors ${
                       activeMenu === cat.slug ? "text-white" : "text-gray-300 hover:text-white"
                     }`}
                   >
@@ -108,26 +108,24 @@ export default function Header() {
                   </Link>
 
                   {cat.children && activeMenu === cat.slug && (
-                    <div
-                      className="absolute top-full left-0 bg-white text-gray-900 shadow-xl py-3 px-5 min-w-48 z-50"
-                      onMouseEnter={() => handleMenuEnter(cat.slug)}
-                      onMouseLeave={handleMenuLeave}
-                    >
-                      <Link
-                        href={`/kategorija/${cat.slug}`}
-                        className="block text-sm font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100 hover:text-black"
-                      >
-                        Visi
-                      </Link>
-                      {cat.children.map((child, i) => (
+                    <div className="absolute top-full left-0 pt-0">
+                      <div className="bg-white text-gray-900 shadow-xl py-3 px-5 min-w-48">
                         <Link
-                          key={i}
-                          href={`/kategorija/${child.slug}`}
-                          className="block text-sm text-gray-600 hover:text-black py-1.5 transition-colors"
+                          href={`/kategorija/${cat.slug}`}
+                          className="block text-sm font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100 hover:text-black"
                         >
-                          {child.name}
+                          Visi
                         </Link>
-                      ))}
+                        {cat.children.map((child, i) => (
+                          <Link
+                            key={i}
+                            href={`/kategorija/${child.slug}`}
+                            className="block text-sm text-gray-600 hover:text-black py-1.5 transition-colors"
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
