@@ -35,6 +35,7 @@ export default async function CategoryPage({
 
   const currentCategory = categories.find((c: any) => c.slug === slug);
   const categoryName = currentCategory?.name || slug;
+  const productsWithImages = (data.products || []).filter((p: any) => p.images && p.images.length > 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -49,11 +50,11 @@ export default async function CategoryPage({
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-3xl font-black uppercase tracking-tight">{categoryName}</h1>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">{data.pagination?.total || 0} produktų</span>
+          <span className="text-sm text-gray-400">{productsWithImages.length} produktų</span>
         </div>
       </div>
 
-      {/* Kategorijų filtrai — horizontalus */}
+      {/* Kategorijų filtrai */}
       <div className="flex flex-wrap gap-2 mb-10 border-b border-gray-100 pb-6">
         <Link
           href="/"
@@ -77,8 +78,8 @@ export default async function CategoryPage({
       </div>
 
       {/* Produktai */}
-      {data.products && data.products.length > 0 ? (
-        <ProductGrid products={data.products} />
+      {productsWithImages.length > 0 ? (
+        <ProductGrid products={productsWithImages} />
       ) : (
         <div className="text-center py-20 text-gray-400">
           <p>Šioje kategorijoje prekių dar nėra</p>
