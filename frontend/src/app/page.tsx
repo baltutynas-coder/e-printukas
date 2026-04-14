@@ -3,7 +3,7 @@ import Link from "next/link";
 
 async function getProducts() {
   try {
-    const res = await fetch("http://localhost:4000/api/products", { cache: "no-store" });
+    const res = await fetch("http://localhost:4000/api/products?limit=24", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
     const data = await res.json();
     return data.products;
@@ -27,10 +27,11 @@ async function getCategories() {
 
 export default async function Home() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+  const productsWithImages = products.filter((p: any) => p.images && p.images.length > 0);
 
   return (
     <div>
-      {/* HERO — pilno pločio */}
+      {/* HERO */}
       <section className="relative bg-black text-white overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
         <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center" />
@@ -51,7 +52,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Kategorijos — 3 stulpeliai su nuotraukomis */}
+      {/* Kategorijos */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link href="/kategorija/marskineliai" className="group relative overflow-hidden aspect-[4/5]">
@@ -100,9 +101,9 @@ export default async function Home() {
       <section id="produktai" className="max-w-7xl mx-auto px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-black uppercase tracking-tight">Naujausi produktai</h2>
-          <span className="text-sm text-gray-400">{products.length} produktų</span>
+          <span className="text-sm text-gray-400">{productsWithImages.length} produktų</span>
         </div>
-        <ProductGrid products={products} />
+        <ProductGrid products={productsWithImages} />
       </section>
     </div>
   );
