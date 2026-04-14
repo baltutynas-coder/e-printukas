@@ -6,34 +6,27 @@ import { useCartStore } from "@/lib/cartStore";
 
 const menuCategories = [
   {
-    name: "Marškinėliai",
-    slug: "marskineliai",
+    name: "Marškinėliai ir polo",
+    slug: "marskineliai-ir-polo",
     children: [
-      { name: "Trumpomis rankovėmis", slug: "marskineliai" },
-      { name: "Ilgomis rankovėmis", slug: "marskineliai" },
-    ],
-  },
-  {
-    name: "Polo marškinėliai",
-    slug: "polo-marskineliai",
-    children: [
-      { name: "Trumpomis rankovėmis", slug: "polo-marskineliai" },
+      { name: "Marškinėliai", slug: "marskineliai" },
+      { name: "Polo marškinėliai", slug: "polo-marskineliai" },
     ],
   },
   {
     name: "Džemperiai",
     slug: "dzemperiai",
     children: [
-      { name: "Be gobtuvo", slug: "dzemperiai" },
-      { name: "Su gobtuvu", slug: "dzemperiai" },
+      { name: "Megztiniai", slug: "megztiniai" },
+      { name: "Su gobtuvu", slug: "su-gobtuvu" },
     ],
   },
   {
     name: "Striukės ir paltai",
     slug: "striukes",
     children: [
-      { name: "Striukės", slug: "striukes" },
-      { name: "Liemenės", slug: "striukes" },
+      { name: "Liemenės", slug: "liemenes" },
+      { name: "Striukės", slug: "striukes-sub" },
     ],
   },
   {
@@ -41,8 +34,12 @@ const menuCategories = [
     slug: "kelnes",
   },
   {
-    name: "Sportinė apranga",
-    slug: "sportine-apranga",
+    name: "Sportinė kolekcija",
+    slug: "sportine-kolekcija",
+    children: [
+      { name: "Sportiniai marškinėliai", slug: "sportiniai-marskineliai" },
+      { name: "Sportiniai komplektai", slug: "sportiniai-komplektai" },
+    ],
   },
 ];
 
@@ -98,7 +95,7 @@ export default function Header() {
                 <div
                   key={cat.slug}
                   className="relative"
-                  onMouseEnter={() => handleMenuEnter(cat.slug)}
+                  onMouseEnter={() => cat.children && handleMenuEnter(cat.slug)}
                   onMouseLeave={handleMenuLeave}
                 >
                   <Link
@@ -112,15 +109,15 @@ export default function Header() {
 
                   {cat.children && activeMenu === cat.slug && (
                     <div
-                      className="absolute top-full left-0 bg-white text-gray-900 shadow-xl rounded-b-lg py-4 px-6 min-w-50 z-50"
+                      className="absolute top-full left-0 bg-white text-gray-900 shadow-xl py-3 px-5 min-w-48 z-50"
                       onMouseEnter={() => handleMenuEnter(cat.slug)}
                       onMouseLeave={handleMenuLeave}
                     >
                       <Link
                         href={`/kategorija/${cat.slug}`}
-                        className="block text-sm font-bold text-gray-900 mb-3 hover:text-black"
+                        className="block text-sm font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100 hover:text-black"
                       >
-                        Visi {cat.name.toLowerCase()}
+                        Visi
                       </Link>
                       {cat.children.map((child, i) => (
                         <Link
