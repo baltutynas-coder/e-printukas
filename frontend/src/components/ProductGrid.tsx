@@ -7,6 +7,7 @@ interface Product {
   description: string;
   price: string;
   comparePrice: string | null;
+  sku: string | null;
   images: { url: string; alt: string }[];
   category: { name: string; slug: string } | null;
   variants: { color: string; colorHex: string; size: string; stock: number }[];
@@ -22,7 +23,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

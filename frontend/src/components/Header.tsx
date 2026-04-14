@@ -1,48 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/lib/cartStore";
+
+const menuCategories = [
+  {
+    name: "Marškinėliai",
+    slug: "marskineliai",
+    children: [
+      { name: "Trumpomis rankovėmis", slug: "marskineliai" },
+      { name: "Ilgomis rankovėmis", slug: "marskineliai" },
+    ],
+  },
+  {
+    name: "Polo marškinėliai",
+    slug: "polo-marskineliai",
+    children: [
+      { name: "Trumpomis rankovėmis", slug: "polo-marskineliai" },
+    ],
+  },
+  {
+    name: "Džemperiai",
+    slug: "dzemperiai",
+    children: [
+      { name: "Be gobtuvo", slug: "dzemperiai" },
+      { name: "Su gobtuvu", slug: "dzemperiai" },
+    ],
+  },
+  {
+    name: "Striukės ir paltai",
+    slug: "striukes",
+    children: [
+      { name: "Striukės", slug: "striukes" },
+      { name: "Liemenės", slug: "striukes" },
+    ],
+  },
+  {
+    name: "Kelnės",
+    slug: "kelnes",
+  },
+  {
+    name: "Sportinė apranga",
+    slug: "sportine-apranga",
+  },
+  {
+    name: "Darbo drabužiai",
+    slug: "darbo-drabuziai",
+  },
+  {
+    name: "Aksesuarai",
+    slug: "aksesuarai",
+  },
+];
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const menuTimeout = useRef<NodeJS.Timeout | null>(null);
   const items = useCartStore((state) => state.items);
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => setMounted(true), []);
 
+  const handleMenuEnter = (slug: string) => {
+    if (menuTimeout.current) clearTimeout(menuTimeout.current);
+    setActiveMenu(slug);
+  };
+
+  const handleMenuLeave = () => {
+    menuTimeout.current = setTimeout(() => setActiveMenu(null), 200);
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🖨️</span>
-            <span className="text-xl font-bold text-gray-900">
-              e.<span className="text-emerald-600">printukas</span>.lt
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">Pradžia</Link>
-            <Link href="/katalogas" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">Katalogas</Link>
-            <Link href="/apie" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">Apie mus</Link>
-            <Link href="/kontaktai" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">Kontaktai</Link>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <Link href="/krepselis" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-              </svg>
-              {mounted && cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-
-            <button className="md:hidden p-2 text-gray-600" onClick={() => setMenuOpen(!menuOpen)}>
+    <>
+      <header className="bg-black text-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            {/* Kairė: Hamburger meniu (mobiliam) */}
+            <button
+              className="lg:hidden p-2 text-white hover:text-gray-300 transition-colors"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                 {menuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -51,20 +92,138 @@ export default function Header() {
                 )}
               </svg>
             </button>
+
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/icon-192.png" alt="e" className="h-8 w-8" />
+              <span className="text-xl font-black tracking-tight uppercase">
+                printukas
+              </span>
+            </Link>
+
+            {/* Desktop navigacija */}
+            <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+              {menuCategories.map((cat) => (
+                <div
+                  key={cat.slug}
+                  className="relative"
+                  onMouseEnter={() => handleMenuEnter(cat.slug)}
+                  onMouseLeave={handleMenuLeave}
+                >
+                  <Link
+                    href={`/kategorija/${cat.slug}`}
+                    className={`px-3 py-4 text-sm font-medium transition-colors ${
+                      activeMenu === cat.slug ? "text-white" : "text-gray-300 hover:text-white"
+                    }`}
+                  >
+                    {cat.name}
+                  </Link>
+
+                  {/* Mega meniu dropdown */}
+                  {cat.children && activeMenu === cat.slug && (
+                    <div
+                      className="absolute top-full left-0 bg-white text-gray-900 shadow-xl rounded-b-lg py-4 px-6 min-w-[200px] z-50"
+                      onMouseEnter={() => handleMenuEnter(cat.slug)}
+                      onMouseLeave={handleMenuLeave}
+                    >
+                      <Link
+                        href={`/kategorija/${cat.slug}`}
+                        className="block text-sm font-bold text-gray-900 mb-3 hover:text-black"
+                      >
+                        Visi {cat.name.toLowerCase()}
+                      </Link>
+                      {cat.children.map((child, i) => (
+                        <Link
+                          key={i}
+                          href={`/kategorija/${child.slug}`}
+                          className="block text-sm text-gray-600 hover:text-black py-1.5 transition-colors"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+
+            {/* Dešinė: Paieška + Krepšelis */}
+            <div className="flex items-center gap-3">
+              {/* Paieška */}
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="p-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+              </button>
+
+              {/* Krepšelis */}
+              <Link href="/krepselis" className="relative p-2 text-gray-300 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                </svg>
+                {mounted && cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-white text-black text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
         </div>
 
-        {menuOpen && (
-          <nav className="md:hidden py-4 border-t border-gray-100">
-            <div className="flex flex-col gap-3">
-              <Link href="/" className="text-sm font-medium text-gray-600 hover:text-emerald-600 py-2" onClick={() => setMenuOpen(false)}>Pradžia</Link>
-              <Link href="/katalogas" className="text-sm font-medium text-gray-600 hover:text-emerald-600 py-2" onClick={() => setMenuOpen(false)}>Katalogas</Link>
-              <Link href="/apie" className="text-sm font-medium text-gray-600 hover:text-emerald-600 py-2" onClick={() => setMenuOpen(false)}>Apie mus</Link>
-              <Link href="/kontaktai" className="text-sm font-medium text-gray-600 hover:text-emerald-600 py-2" onClick={() => setMenuOpen(false)}>Kontaktai</Link>
+        {/* Paieškos juosta */}
+        {searchOpen && (
+          <div className="border-t border-gray-800 py-4 px-4">
+            <div className="max-w-2xl mx-auto">
+              <input
+                type="text"
+                placeholder="Ieškoti produktų..."
+                autoFocus
+                className="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-gray-500 placeholder-gray-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setSearchOpen(false);
+                }}
+              />
             </div>
-          </nav>
+          </div>
         )}
-      </div>
-    </header>
+
+        {/* Mobilusis meniu */}
+        {menuOpen && (
+          <div className="lg:hidden border-t border-gray-800 max-h-[70vh] overflow-auto">
+            <nav className="py-2">
+              {menuCategories.map((cat) => (
+                <div key={cat.slug}>
+                  <Link
+                    href={`/kategorija/${cat.slug}`}
+                    className="block px-6 py-3 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-900 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {cat.name}
+                  </Link>
+                  {cat.children && (
+                    <div className="pl-4">
+                      {cat.children.map((child, i) => (
+                        <Link
+                          key={i}
+                          href={`/kategorija/${child.slug}`}
+                          className="block px-6 py-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
+        )}
+      </header>
+    </>
   );
 }

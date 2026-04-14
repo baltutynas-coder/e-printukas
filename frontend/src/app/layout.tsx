@@ -9,6 +9,10 @@ const geist = Geist({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "e.printukas.lt — Drabužiai ir tekstilė",
   description: "Kokybiški drabužiai ir tekstilė geriausiomis kainomis. Marškinėliai, polo, džemperiai, striukės.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icon-192.png",
+  },
 };
 
 export default function RootLayout({

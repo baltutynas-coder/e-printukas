@@ -1,12 +1,9 @@
 import ProductGrid from "@/components/ProductGrid";
 import Link from "next/link";
 
-// Gauti produktus iš backend API
 async function getProducts() {
   try {
-    const res = await fetch("http://localhost:4000/api/products", {
-      cache: "no-store", // Visada gauti šviežius duomenis
-    });
+    const res = await fetch("http://localhost:4000/api/products", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
     const data = await res.json();
     return data.products;
@@ -16,12 +13,9 @@ async function getProducts() {
   }
 }
 
-// Gauti kategorijas
 async function getCategories() {
   try {
-    const res = await fetch("http://localhost:4000/api/categories", {
-      cache: "no-store",
-    });
+    const res = await fetch("http://localhost:4000/api/categories", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti kategorijų");
     const data = await res.json();
     return data.categories;
@@ -32,52 +26,70 @@ async function getCategories() {
 }
 
 export default async function Home() {
-  const [products, categories] = await Promise.all([
-    getProducts(),
-    getCategories(),
-  ]);
+  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
 
   return (
     <div>
-      {/* HERO sekcija */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-24 sm:py-32">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6">
-              Kokybiški drabužiai
-              <span className="block text-emerald-400 mt-2">geriausiomis kainomis</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
-              Marškinėliai, polo, džemperiai ir kita tekstilė. 
-              Platus spalvų ir dydžių pasirinkimas.
-            </p>
-            <Link
-              href="#produktai"
-              className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors"
-            >
-              Žiūrėti katalogą
-            </Link>
-          </div>
+      {/* HERO — pilno pločio */}
+      <section className="relative bg-black text-white overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center" />
+        <div className="relative z-20 max-w-7xl mx-auto px-6 py-32 sm:py-44">
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight max-w-xl">
+            Kokybiški drabužiai
+            <span className="block">jūsų verslui</span>
+          </h1>
+          <p className="text-lg text-gray-300 mt-6 max-w-md">
+            Marškinėliai, polo, džemperiai ir kita tekstilė. Platus spalvų ir dydžių pasirinkimas.
+          </p>
+          <Link
+            href="#produktai"
+            className="inline-block mt-8 bg-white text-black font-bold px-8 py-3.5 text-sm uppercase tracking-wider hover:bg-gray-200 transition-colors"
+          >
+            Žiūrėti katalogą →
+          </Link>
         </div>
       </section>
 
-      {/* Kategorijos */}
+      {/* Kategorijos — 3 stulpeliai su nuotraukomis */}
       <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-2xl font-bold mb-8 text-center">Kategorijos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/kategorija/marskineliai" className="group relative overflow-hidden aspect-[4/5]">
+            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center group-hover:scale-105 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 z-10">
+              <span className="text-white text-2xl font-bold">Vyrams</span>
+            </div>
+          </Link>
+          <Link href="/kategorija/polo-marskineliai" className="group relative overflow-hidden aspect-[4/5]">
+            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_mujer_2026_04.jpg')] bg-cover bg-center group-hover:scale-105 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 z-10">
+              <span className="text-white text-2xl font-bold">Moterims</span>
+            </div>
+          </Link>
+          <Link href="/kategorija/sportine-apranga" className="group relative overflow-hidden aspect-[4/5]">
+            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_ninos_2026_04.jpg')] bg-cover bg-center group-hover:scale-105 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 z-10">
+              <span className="text-white text-2xl font-bold">Vaikams</span>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Kategorijų sąrašas */}
+      <section className="max-w-7xl mx-auto px-4 pb-8">
+        <div className="flex flex-wrap gap-3 justify-center">
           {categories.map((cat: any) => (
             <Link
               key={cat.id}
               href={`/kategorija/${cat.slug}`}
-              className="group bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 rounded-xl p-6 text-center transition-all"
+              className="text-sm px-5 py-2.5 border border-gray-200 text-gray-700 hover:border-black hover:text-black transition-colors uppercase tracking-wider font-medium"
             >
-              <span className="text-sm font-medium text-gray-700 group-hover:text-emerald-700">
-                {cat.name}
-              </span>
+              {cat.name}
               {cat._count?.products > 0 && (
-                <span className="block text-xs text-gray-400 mt-1">
-                  {cat._count.products} prekės
-                </span>
+                <span className="ml-1.5 text-gray-400 text-xs">({cat._count.products})</span>
               )}
             </Link>
           ))}
@@ -86,7 +98,10 @@ export default async function Home() {
 
       {/* Produktai */}
       <section id="produktai" className="max-w-7xl mx-auto px-4 pb-20">
-        <h2 className="text-2xl font-bold mb-8 text-center">Visi produktai</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-black uppercase tracking-tight">Naujausi produktai</h2>
+          <span className="text-sm text-gray-400">{products.length} produktų</span>
+        </div>
         <ProductGrid products={products} />
       </section>
     </div>
