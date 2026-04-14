@@ -8,8 +8,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Logo + aprašymas */}
           <div>
-            <Link href="/" className="text-xl font-black uppercase tracking-tight">
-              e.printukas
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/icon-192.png" alt="e" className="h-6 w-6" />
+              <span className="text-xl font-black uppercase tracking-tight font-[family-name:var(--font-montserrat)]">
+                printukas
+              </span>
             </Link>
             <p className="text-sm text-gray-500 mt-4 leading-relaxed">
               Kokybiški drabužiai ir tekstilė jūsų verslui. Platus asortimentas, greitas pristatymas.
@@ -20,11 +23,11 @@ export default function Footer() {
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Katalogas</h3>
             <ul className="space-y-2.5">
-              <li><Link href="/kategorija/marskineliai" className="text-sm text-gray-500 hover:text-white transition-colors">Marškinėliai</Link></li>
-              <li><Link href="/kategorija/polo-marskineliai" className="text-sm text-gray-500 hover:text-white transition-colors">Polo marškinėliai</Link></li>
+              <li><Link href="/kategorija/marskineliai-ir-polo" className="text-sm text-gray-500 hover:text-white transition-colors">Marškinėliai ir polo</Link></li>
               <li><Link href="/kategorija/dzemperiai" className="text-sm text-gray-500 hover:text-white transition-colors">Džemperiai</Link></li>
               <li><Link href="/kategorija/striukes" className="text-sm text-gray-500 hover:text-white transition-colors">Striukės ir paltai</Link></li>
-              <li><Link href="/kategorija/sportine-apranga" className="text-sm text-gray-500 hover:text-white transition-colors">Sportinė apranga</Link></li>
+              <li><Link href="/kategorija/kelnes" className="text-sm text-gray-500 hover:text-white transition-colors">Kelnės</Link></li>
+              <li><Link href="/kategorija/sportine-kolekcija" className="text-sm text-gray-500 hover:text-white transition-colors">Sportinė kolekcija</Link></li>
             </ul>
           </div>
 

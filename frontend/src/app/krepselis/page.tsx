@@ -12,7 +12,7 @@ export default function CartPage() {
         <div className="text-6xl mb-6">🛒</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-4">Krepšelis tuščias</h1>
         <p className="text-gray-500 mb-8">Pridėkite prekių iš katalogo</p>
-        <Link href="/" className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors">
+        <Link href="/" className="inline-block bg-black hover:bg-gray-800 text-white font-semibold px-8 py-3 transition-colors uppercase tracking-wider text-sm">
           Grįžti į parduotuvę
         </Link>
       </div>
@@ -28,9 +28,9 @@ export default function CartPage() {
       <div className="space-y-4">
         {items.map((item) => (
           <div key={`${item.productId}-${item.color}-${item.size}`}
-            className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-4">
+            className="flex items-center gap-4 bg-white border border-gray-200 p-4">
             <Link href={`/produktas/${item.slug}`} className="shrink-0">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-20 h-20 bg-gray-100 flex items-center justify-center overflow-hidden">
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                 ) : (
@@ -42,7 +42,7 @@ export default function CartPage() {
             </Link>
 
             <div className="flex-1 min-w-0">
-              <Link href={`/produktas/${item.slug}`} className="font-semibold text-gray-900 hover:text-emerald-600 transition-colors">
+              <Link href={`/produktas/${item.slug}`} className="font-semibold text-gray-900 hover:text-black transition-colors">
                 {item.name}
               </Link>
               <div className="flex items-center gap-2 mt-1">
@@ -51,10 +51,10 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div className="flex items-center border border-gray-300 rounded-lg">
-              <button onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity - 1)} className="px-2 py-1 text-gray-600 hover:text-gray-900 text-sm">−</button>
-              <span className="px-3 py-1 text-sm font-medium">{item.quantity}</span>
-              <button onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity + 1)} className="px-2 py-1 text-gray-600 hover:text-gray-900 text-sm">+</button>
+            <div className="flex items-center border border-gray-200">
+              <button onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity - 1)} className="px-3 py-2 text-gray-500 hover:text-black text-sm">−</button>
+              <span className="px-3 py-2 text-sm font-medium border-x border-gray-200">{item.quantity}</span>
+              <button onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity + 1)} className="px-3 py-2 text-gray-500 hover:text-black text-sm">+</button>
             </div>
 
             <div className="text-right shrink-0 w-20">
@@ -71,7 +71,7 @@ export default function CartPage() {
       </div>
 
       {/* Suma */}
-      <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
+      <div className="mt-8 border border-gray-200 p-6">
         <div className="flex justify-between text-sm text-gray-600 mb-2">
           <span>Prekės</span>
           <span>{totalPrice().toFixed(2)} €</span>
@@ -81,7 +81,7 @@ export default function CartPage() {
           <span>{shippingCost === 0 ? "Nemokamas" : `${shippingCost.toFixed(2)} €`}</span>
         </div>
         {shippingCost > 0 && (
-          <p className="text-xs text-emerald-600 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             Nemokamas pristatymas nuo 50 € (trūksta {(50 - totalPrice()).toFixed(2)} €)
           </p>
         )}
@@ -90,10 +90,10 @@ export default function CartPage() {
           <span className="text-2xl font-bold text-gray-900">{(totalPrice() + shippingCost).toFixed(2)} €</span>
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={clearCart} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm">
+          <button onClick={clearCart} className="px-6 py-3 border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors text-sm">
             Išvalyti
           </button>
-          <Link href="/checkout" className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg text-center transition-colors">
+          <Link href="/checkout" className="flex-1 bg-black hover:bg-gray-800 text-white font-bold py-3.5 text-center transition-colors uppercase tracking-wider text-sm">
             Pereiti prie apmokėjimo
           </Link>
         </div>
