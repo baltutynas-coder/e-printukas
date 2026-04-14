@@ -22,12 +22,12 @@ export default function ProductCard({ product }: { product: Product }) {
     <Link href={`/produktas/${product.slug}`} className="group">
       <div className="overflow-hidden">
         {/* Nuotrauka */}
-        <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden">
+        <div className="aspect-square bg-white relative overflow-hidden">
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0].url}
               alt={product.images[0].alt || product.name}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -38,9 +38,8 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* Info — Roly stilius */}
+        {/* Info */}
         <div className="pt-3 pb-2">
-          {/* Pavadinimas + SKU */}
           <div className="flex items-baseline gap-2">
             <h3 className="font-black text-sm uppercase tracking-tight text-gray-900 group-hover:text-black">
               {product.name}
@@ -50,14 +49,12 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          {/* Aprašymas */}
           {product.description && (
             <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
               {product.description}
             </p>
           )}
 
-          {/* Spalvos */}
           <div className="flex items-center gap-1 mt-2.5">
             {uniqueColors.slice(0, 8).map((c) => (
               <span
