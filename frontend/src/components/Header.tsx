@@ -96,7 +96,7 @@ export default function Header() {
 
             <Link href="/" className="flex items-center gap-2">
               <img src="/icon-192.png" alt="e" className="h-8 w-8" />
-              <span className="text-xl font-black tracking-tight uppercase">
+              <span className="text-xl font-black tracking-tight uppercase font-[family-name:var(--font-montserrat)]">
                 printukas
               </span>
             </Link>
