@@ -63,7 +63,9 @@ export default function Header() {
   const items = useCartStore((state) => state.items);
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleMenuEnter = (slug: string) => {
     if (menuTimeout.current) clearTimeout(menuTimeout.current);
@@ -79,7 +81,6 @@ export default function Header() {
       <header className="bg-black text-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            {/* Kairė: Hamburger meniu (mobiliam) */}
             <button
               className="lg:hidden p-2 text-white hover:text-gray-300 transition-colors"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -93,7 +94,6 @@ export default function Header() {
               </svg>
             </button>
 
-            {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <img src="/icon-192.png" alt="e" className="h-8 w-8" />
               <span className="text-xl font-black tracking-tight uppercase">
@@ -101,7 +101,6 @@ export default function Header() {
               </span>
             </Link>
 
-            {/* Desktop navigacija */}
             <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
               {menuCategories.map((cat) => (
                 <div
@@ -119,10 +118,9 @@ export default function Header() {
                     {cat.name}
                   </Link>
 
-                  {/* Mega meniu dropdown */}
                   {cat.children && activeMenu === cat.slug && (
                     <div
-                      className="absolute top-full left-0 bg-white text-gray-900 shadow-xl rounded-b-lg py-4 px-6 min-w-[200px] z-50"
+                      className="absolute top-full left-0 bg-white text-gray-900 shadow-xl rounded-b-lg py-4 px-6 min-w-50 z-50"
                       onMouseEnter={() => handleMenuEnter(cat.slug)}
                       onMouseLeave={handleMenuLeave}
                     >
@@ -147,9 +145,7 @@ export default function Header() {
               ))}
             </nav>
 
-            {/* Dešinė: Paieška + Krepšelis */}
             <div className="flex items-center gap-3">
-              {/* Paieška */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
                 className="p-2 text-gray-300 hover:text-white transition-colors"
@@ -159,7 +155,6 @@ export default function Header() {
                 </svg>
               </button>
 
-              {/* Krepšelis */}
               <Link href="/krepselis" className="relative p-2 text-gray-300 hover:text-white transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -174,7 +169,6 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Paieškos juosta */}
         {searchOpen && (
           <div className="border-t border-gray-800 py-4 px-4">
             <div className="max-w-2xl mx-auto">
@@ -191,7 +185,6 @@ export default function Header() {
           </div>
         )}
 
-        {/* Mobilusis meniu */}
         {menuOpen && (
           <div className="lg:hidden border-t border-gray-800 max-h-[70vh] overflow-auto">
             <nav className="py-2">
