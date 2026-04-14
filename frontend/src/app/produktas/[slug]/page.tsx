@@ -1,17 +1,14 @@
+import ProductDetails from "@/components/ProductDetails";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ProductDetails from "@/components/ProductDetails";
 
 async function getProduct(slug: string) {
   try {
-    const res = await fetch(`http://localhost:4000/api/products/${slug}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(`http://localhost:4000/api/products/${slug}`, { cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     return data.product;
   } catch (error) {
-    console.error("Klaida gaunant produktą:", error);
     return null;
   }
 }
@@ -24,27 +21,26 @@ export default async function ProductPage({
   const { slug } = await params;
   const product = await getProduct(slug);
 
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
-        <Link href="/" className="hover:text-emerald-600">Pradžia</Link>
-        <span>/</span>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Breadcrumbs — Roly stilius */}
+      <nav className="flex items-center gap-2 text-xs text-gray-400 mb-8">
+        <Link href="/" className="hover:text-black transition-colors">🏠</Link>
+        <span>›</span>
         {product.category && (
           <>
-            <Link href={`/kategorija/${product.category.slug}`} className="hover:text-emerald-600">
+            <Link href={`/kategorija/${product.category.slug}`} className="hover:text-black transition-colors">
               {product.category.name}
             </Link>
-            <span>/</span>
+            <span>›</span>
           </>
         )}
-        <span className="text-gray-900">{product.name}</span>
+        <span className="text-black font-medium">{product.name}</span>
       </nav>
 
+      {/* Produkto detalės */}
       <ProductDetails product={product} />
     </div>
   );
