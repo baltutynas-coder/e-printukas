@@ -44,14 +44,6 @@ const menuCategories = [
     name: "Sportinė apranga",
     slug: "sportine-apranga",
   },
-  {
-    name: "Darbo drabužiai",
-    slug: "darbo-drabuziai",
-  },
-  {
-    name: "Aksesuarai",
-    slug: "aksesuarai",
-  },
 ];
 
 export default function Header() {
