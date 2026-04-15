@@ -29,6 +29,15 @@ interface Product {
   variants: Variant[];
 }
 
+// Spalvų kodų žemėlapis (Roly stilius)
+const COLOR_CODES: Record<string, string> = {
+  "#FFFFFF": "01", "#000000": "02", "#001D43": "55", "#DC002E": "60",
+  "#0060A9": "05", "#C4DDF1": "86", "#00A0D1": "12", "#008F4F": "83",
+  "#004237": "56", "#51A025": "264", "#F08927": "31", "#FFE400": "03",
+  "#C4C4C4": "58", "#484E41": "46", "#DC006B": "78", "#F8CCD5": "48",
+  "#750D68": "71", "#8C1713": "57", "#573D2A": "67", "#4C6781": "231",
+};
+
 export default function ProductDetails({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
 
@@ -59,7 +68,17 @@ export default function ProductDetails({ product }: { product: Product }) {
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const [showTechInfo, setShowTechInfo] = useState(false);
+
+  // Accordion sekcijos
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    tech: false,
+    composition: false,
+    packaging: false,
+  });
+
+  const toggleSection = (key: string) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleColorChange = (hex: string) => {
     setSelectedColor(hex);
@@ -89,9 +108,10 @@ export default function ProductDetails({ product }: { product: Product }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-      {/* Nuotrauka */}
+      {/* Nuotraukos — kairė pusė */}
       <div>
-        <div className="aspect-square bg-white flex items-center justify-center overflow-hidden">
+        {/* Pagrindinė nuotrauka */}
+        <div className="aspect-square bg-white flex items-center justify-center overflow-hidden border border-gray-100">
           {currentImage ? (
             <img
               src={currentImage.url}
@@ -105,9 +125,20 @@ export default function ProductDetails({ product }: { product: Product }) {
             </svg>
           )}
         </div>
+
+        {/* Mažos nuotraukų miniatiūros (jei yra kelios) */}
+        {product.images && product.images.length > 1 && (
+          <div className="grid grid-cols-4 gap-2 mt-3">
+            {product.images.slice(0, 4).map((img, i) => (
+              <div key={img.id || i} className="aspect-square bg-white border border-gray-100 flex items-center justify-center overflow-hidden cursor-pointer hover:border-black transition-colors">
+                <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain p-2" />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Informacija */}
+      {/* Informacija — dešinė pusė */}
       <div>
         {/* Pavadinimas — Roly stilius */}
         <h1 className="font-[family-name:var(--font-montserrat)]">
@@ -124,6 +155,101 @@ export default function ProductDetails({ product }: { product: Product }) {
           <p className="text-sm text-gray-500 mt-4 leading-relaxed">{product.description}</p>
         )}
 
+        {/* Spalvos — Roly stilius su kodais */}
+        <div className="mt-8 pb-6 border-b border-gray-100">
+          <div className="flex flex-wrap gap-3">
+            {uniqueColors.map((c) => {
+              const code = COLOR_CODES[c.hex.toUpperCase()] || "";
+              const isSelected = selectedColor === c.hex;
+              return (
+                <button
+                  key={c.hex}
+                  onClick={() => handleColorChange(c.hex)}
+                  title={c.color}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span
+                    className={`w-9 h-9 rounded-full transition-all ${
+                      isSelected
+                        ? "ring-2 ring-black ring-offset-2 scale-110"
+                        : "border border-gray-300 hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                  {code && (
+                    <span className={`text-[10px] ${isSelected ? "text-black font-bold" : "text-gray-400"}`}>
+                      {code}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Techninė informacija — Roly accordion */}
+        <div className="border-b border-gray-100">
+          <button
+            onClick={() => toggleSection('tech')}
+            className="w-full flex items-center justify-between py-4 text-left"
+          >
+            <span className="text-sm font-bold text-gray-900">Techninė informacija</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+              className={`w-4 h-4 text-gray-400 transition-transform ${openSections.tech ? "rotate-180" : ""}`}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          {openSections.tech && (
+            <div className="pb-4 text-sm text-gray-500 space-y-2">
+              <p>{product.description}</p>
+              {product.category && <p>Kategorija: {product.category.name}</p>}
+              {product.sku && <p>Modelis: {product.sku}</p>}
+              <p>Spalvų: {uniqueColors.length}</p>
+              <p>Dydžių: {sizesForColor.length}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Sudėtis ir pastabos */}
+        <div className="border-b border-gray-100">
+          <button
+            onClick={() => toggleSection('composition')}
+            className="w-full flex items-center justify-between py-4 text-left"
+          >
+            <span className="text-sm font-bold text-gray-900">Sudėtis ir pastabos</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+              className={`w-4 h-4 text-gray-400 transition-transform ${openSections.composition ? "rotate-180" : ""}`}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          {openSections.composition && (
+            <div className="pb-4 text-sm text-gray-500 space-y-2">
+              <p>100% medvilnė (šukuota medvilnė)</p>
+              <p>Siūlės šoninės, užlyginta apykaklės juosta</p>
+            </div>
+          )}
+        </div>
+
+        {/* Pakuotė */}
+        <div className="border-b border-gray-100">
+          <button
+            onClick={() => toggleSection('packaging')}
+            className="w-full flex items-center justify-between py-4 text-left"
+          >
+            <span className="text-sm font-bold text-gray-900">Pakuotė</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+              className={`w-4 h-4 text-gray-400 transition-transform ${openSections.packaging ? "rotate-180" : ""}`}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          {openSections.packaging && (
+            <div className="pb-4 text-sm text-gray-500 space-y-2">
+              <p>Individualiai supakuota skaidriame polietileno maiše.</p>
+              <p>Kiekis dėžėje: 50 vnt.</p>
+            </div>
+          )}
+        </div>
+
         {/* Kaina */}
         <div className="flex items-center gap-3 mt-6 pb-6 border-b border-gray-100">
           <span className="text-3xl font-black text-gray-900">
@@ -139,28 +265,6 @@ export default function ProductDetails({ product }: { product: Product }) {
               </span>
             </>
           )}
-        </div>
-
-        {/* Spalvos — Roly stilius su kodais */}
-        <div className="mt-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
-            Spalva: <span className="text-gray-900">{selectedColorName}</span>
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {uniqueColors.map((c) => (
-              <button
-                key={c.hex}
-                onClick={() => handleColorChange(c.hex)}
-                title={c.color}
-                className={`w-9 h-9 rounded-full transition-all ${
-                  selectedColor === c.hex
-                    ? "ring-2 ring-black ring-offset-2 scale-110"
-                    : "border border-gray-300 hover:scale-105"
-                }`}
-                style={{ backgroundColor: c.hex }}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Dydžiai */}
@@ -193,7 +297,7 @@ export default function ProductDetails({ product }: { product: Product }) {
         )}
 
         {/* Kiekis + Į krepšelį */}
-        <div className="flex items-center gap-3 mt-8">
+        <div className="flex items-center gap-3 mt-6">
           <div className="flex items-center border border-gray-200">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -219,29 +323,6 @@ export default function ProductDetails({ product }: { product: Product }) {
           >
             {added ? "✓ PRIDĖTA" : `Į KREPŠELĮ — ${(parseFloat(product.price) * quantity).toFixed(2)} €`}
           </button>
-        </div>
-
-        {/* Techninė informacija — Roly accordion stilius */}
-        <div className="mt-10 border-t border-gray-100">
-          <button
-            onClick={() => setShowTechInfo(!showTechInfo)}
-            className="w-full flex items-center justify-between py-4 text-left"
-          >
-            <span className="text-sm font-bold text-gray-900">Techninė informacija</span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-              className={`w-4 h-4 text-gray-400 transition-transform ${showTechInfo ? "rotate-180" : ""}`}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-          {showTechInfo && (
-            <div className="pb-4 text-sm text-gray-500 space-y-2">
-              <p>{product.description}</p>
-              {product.category && <p>Kategorija: {product.category.name}</p>}
-              {product.sku && <p>Modelis: {product.sku}</p>}
-              <p>Spalvų: {uniqueColors.length}</p>
-              <p>Dydžių: {sizesForColor.length}</p>
-            </div>
-          )}
         </div>
       </div>
     </div>

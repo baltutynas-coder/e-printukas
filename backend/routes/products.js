@@ -1,40 +1,39 @@
 // ============================================
 // Produktų maršrutai
 // ============================================
-// VIEŠI (klientams):
-//   GET /api/products          — produktų sąrašas su filtrais
-//   GET /api/products/:slug    — vienas produktas
-//
-// ADMIN (reikia auth):
-//   POST   /api/products       — sukurti produktą
-//   PUT    /api/products/:id   — redaguoti produktą
-//   DELETE /api/products/:id   — ištrinti produktą
-// ============================================
-
 const router = require('express').Router();
 const prisma = require('../config/db');
 const { auth } = require('../middleware/auth');
-
-// ── VIEŠI MARŠRUTAI ──────────────────────
 
 // GET /api/products — produktų sąrašas
 router.get('/', async (req, res) => {
   try {
     const {
-      category,     // Filtras pagal kategoriją
-      search,       // Paieška pagal pavadinimą
-      minPrice,     // Min kaina
-      maxPrice,     // Max kaina
-      sort = 'newest', // Rūšiavimas
-      page = 1,
-      limit = 12
+      category, search, minPrice, maxPrice, gender,
+      sort = 'newest', page = 1, limit = 12
     } = req.query;
 
-    // Sudaryti filtrą
     const where = { published: true };
 
+    // Kategorijos filtravimas — palaiko ir pagrindinę ir subkategoriją
     if (category) {
-      where.category = { slug: category };
+      const cat = await prisma.category.findFirst({
+        where: { slug: category },
+        include: { children: { select: { id: true } } }
+      });
+      if (cat) {
+        if (cat.children && cat.children.length > 0) {
+          const childIds = cat.children.map(c => c.id);
+          where.categoryId = { in: [...childIds, cat.id] };
+        } else {
+          where.categoryId = cat.id;
+        }
+      }
+    }
+
+    // Gender filtras
+    if (gender) {
+      where.gender = gender.toUpperCase();
     }
 
     if (search) {
@@ -50,7 +49,6 @@ router.get('/', async (req, res) => {
       if (maxPrice) where.price.lte = parseFloat(maxPrice);
     }
 
-    // Rūšiavimas
     const orderBy = {
       newest: { createdAt: 'desc' },
       oldest: { createdAt: 'asc' },
@@ -59,17 +57,12 @@ router.get('/', async (req, res) => {
       name: { name: 'asc' }
     }[sort] || { createdAt: 'desc' };
 
-    // Puslapiavimas
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Užklausa
     const [products, total] = await Promise.all([
       prisma.product.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
+        where, orderBy, skip, take,
         include: {
           images: { orderBy: { sortOrder: 'asc' }, take: 1 },
           category: { select: { name: true, slug: true } },
@@ -81,12 +74,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       products,
-      pagination: {
-        page: parseInt(page),
-        limit: take,
-        total,
-        pages: Math.ceil(total / take)
-      }
+      pagination: { page: parseInt(page), limit: take, total, pages: Math.ceil(total / take) }
     });
   } catch (error) {
     console.error('Products list error:', error);
@@ -105,11 +93,9 @@ router.get('/:slug', async (req, res) => {
         variants: true
       }
     });
-
     if (!product || !product.published) {
       return res.status(404).json({ error: 'Produktas nerastas' });
     }
-
     res.json({ product });
   } catch (error) {
     console.error('Product detail error:', error);
@@ -117,44 +103,32 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// ── ADMIN MARŠRUTAI ──────────────────────
-
 // POST /api/products — sukurti produktą
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, description, price, comparePrice, sku, categoryId, published, images, variants } = req.body;
-
+    const { name, description, price, comparePrice, sku, categoryId, published, gender, images, variants } = req.body;
     if (!name || !price) {
       return res.status(400).json({ error: 'Pavadinimas ir kaina privalomi' });
     }
-
-    // Generuoti slug iš pavadinimo
     const slug = name
       .toLowerCase()
       .replace(/[ąčęėįšųūž]/g, c => 'aceeisuuz'['ąčęėįšųūž'.indexOf(c)])
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
-
-    // Patikrinti ar slug unikalus
     const existing = await prisma.product.findUnique({ where: { slug } });
     const finalSlug = existing ? `${slug}-${Date.now()}` : slug;
-
     const product = await prisma.product.create({
       data: {
-        name,
-        slug: finalSlug,
-        description,
+        name, slug: finalSlug, description,
         price: parseFloat(price),
         comparePrice: comparePrice ? parseFloat(comparePrice) : null,
-        sku,
-        categoryId,
-        published: published || false,
+        sku, categoryId, published: published || false,
+        gender: gender || 'UNISEX',
         images: images ? { create: images.map((img, i) => ({ url: img.url, alt: img.alt, sortOrder: i })) } : undefined,
         variants: variants ? { create: variants } : undefined
       },
       include: { images: true, variants: true, category: true }
     });
-
     res.status(201).json({ message: 'Produktas sukurtas', product });
   } catch (error) {
     console.error('Create product error:', error);
@@ -165,8 +139,7 @@ router.post('/', auth, async (req, res) => {
 // PUT /api/products/:id — redaguoti produktą
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { name, description, price, comparePrice, sku, categoryId, published } = req.body;
-
+    const { name, description, price, comparePrice, sku, categoryId, published, gender } = req.body;
     const product = await prisma.product.update({
       where: { id: req.params.id },
       data: {
@@ -176,11 +149,11 @@ router.put('/:id', auth, async (req, res) => {
         ...(comparePrice !== undefined && { comparePrice: comparePrice ? parseFloat(comparePrice) : null }),
         ...(sku !== undefined && { sku }),
         ...(categoryId !== undefined && { categoryId }),
-        ...(published !== undefined && { published })
+        ...(published !== undefined && { published }),
+        ...(gender !== undefined && { gender }),
       },
       include: { images: true, variants: true, category: true }
     });
-
     res.json({ message: 'Produktas atnaujintas', product });
   } catch (error) {
     console.error('Update product error:', error);

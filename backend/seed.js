@@ -1,48 +1,52 @@
 // ============================================
-// DB Seed — Roly.eu stiliaus produktai
+// DB Seed — Roly.eu pilna duomenų struktūra
 // ============================================
-// Paleidimas: npm run db:seed
+// Paleidimas: node seed.js
 // ============================================
 
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
-// Roly.eu spalvų paletė (tikri HEX kodai)
-const COLORS = {
-  WHITE: { name: 'Balta', hex: '#FFFFFF' },
-  BLACK: { name: 'Juoda', hex: '#000000' },
-  NAVY: { name: 'Tamsiai mėlyna', hex: '#001D43' },
-  RED: { name: 'Raudona', hex: '#DC002E' },
-  ROYAL_BLUE: { name: 'Karališka mėlyna', hex: '#0060A9' },
-  SKY_BLUE: { name: 'Dangaus mėlyna', hex: '#C4DDF1' },
-  TURQUOISE: { name: 'Turkio', hex: '#00A0D1' },
-  KELLY_GREEN: { name: 'Žalia', hex: '#008F4F' },
-  BOTTLE_GREEN: { name: 'Butelio žalia', hex: '#004237' },
-  GRASS_GREEN: { name: 'Žolės žalia', hex: '#51A025' },
-  ORANGE: { name: 'Oranžinė', hex: '#F08927' },
-  YELLOW: { name: 'Geltona', hex: '#FFE400' },
-  HEATHER_GREY: { name: 'Pilka', hex: '#C4C4C4' },
-  DARK_LEAD: { name: 'Tamsiai pilka', hex: '#484E41' },
-  ROSETTE: { name: 'Rožinė', hex: '#DC006B' },
-  LIGHT_PINK: { name: 'Šviesiai rožinė', hex: '#F8CCD5' },
-  PURPLE: { name: 'Violetinė', hex: '#750D68' },
-  GARNET: { name: 'Granato', hex: '#8C1713' },
-  CHOCOLATE: { name: 'Šokoladinė', hex: '#573D2A' },
-  DENIM_BLUE: { name: 'Džinso mėlyna', hex: '#4C6781' },
+// Roly spalvų paletė (pilna) — 25 spalvos su Roly kodais
+const C = {
+  WHITE:        { name: 'Balta',             hex: '#FFFFFF', code: '01' },
+  BLACK:        { name: 'Juoda',             hex: '#000000', code: '02' },
+  YELLOW:       { name: 'Geltona',           hex: '#FFE400', code: '03' },
+  ROYAL_BLUE:   { name: 'Karališka mėlyna',  hex: '#0060A9', code: '05' },
+  ORANGE:       { name: 'Oranžinė',          hex: '#F08927', code: '31' },
+  NAVY:         { name: 'Tamsiai mėlyna',    hex: '#001D43', code: '55' },
+  BOTTLE_GREEN: { name: 'Butelio žalia',     hex: '#004237', code: '56' },
+  GARNET:       { name: 'Granato',           hex: '#8C1713', code: '57' },
+  HEATHER_GREY: { name: 'Pilka',             hex: '#C4C4C4', code: '58' },
+  RED:          { name: 'Raudona',           hex: '#DC002E', code: '60' },
+  CHOCOLATE:    { name: 'Šokoladinė',        hex: '#573D2A', code: '67' },
+  PURPLE:       { name: 'Violetinė',         hex: '#750D68', code: '71' },
+  KELLY_GREEN:  { name: 'Žalia',             hex: '#008F4F', code: '83' },
+  SKY_BLUE:     { name: 'Dangaus mėlyna',    hex: '#C4DDF1', code: '86' },
+  TURQUOISE:    { name: 'Turkio',            hex: '#00A0D1', code: '12' },
+  GRASS_GREEN:  { name: 'Žolės žalia',       hex: '#51A025', code: '264' },
+  ROSETTE:      { name: 'Rožinė',           hex: '#DC006B', code: '78' },
+  LIGHT_PINK:   { name: 'Šviesiai rožinė',   hex: '#F8CCD5', code: '48' },
+  DARK_LEAD:    { name: 'Tamsiai pilka',     hex: '#484E41', code: '46' },
+  DENIM_BLUE:   { name: 'Džinso mėlyna',    hex: '#4C6781', code: '231' },
+  CREAM:        { name: 'Kreminė',           hex: '#F5F0E1', code: '132' },
+  WINE:         { name: 'Vyno raudona',      hex: '#722F37', code: '116' },
+  KHAKI:        { name: 'Chaki',             hex: '#6B7532', code: '15' },
+  CORAL:        { name: 'Koralinė',          hex: '#F0786B', code: '169' },
+  ANTHRACITE:   { name: 'Antracitas',        hex: '#3D3D3D', code: '231' },
 };
 
-// Dydžiai
-const ADULT_SIZES = ['S', 'M', 'L', 'XL', '2XL'];
-const KIDS_SIZES = ['3/4', '5/6', '7/8', '9/10', '11/12'];
-const ALL_SIZES = [...ADULT_SIZES, '3XL', '4XL'];
-const SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
+// Dydžių rinkiniai
+const SIZES_XS_2XL  = ['XS', 'S', 'M', 'L', 'XL', '2XL'];
+const SIZES_XS_4XL  = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+const SIZES_XS_5XL  = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+const SIZES_KIDS    = ['3/4', '5/6', '7/8', '9/10', '11/12'];
 
 async function main() {
-  console.log('🌱 Sėjame Roly.eu stiliaus duomenis...');
+  console.log('🌱 Sėjame Roly.eu stiliaus duomenis (v2 — pilna)...\n');
   console.log('🗑️  Valome senus duomenis...');
 
-  // Išvalyti senus duomenis
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.productVariant.deleteMany();
@@ -50,302 +54,171 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
 
-  // 1. Admin vartotojas
+  // Admin
   const hashedPassword = await bcrypt.hash('admin123', 12);
-  const admin = await prisma.admin.upsert({
+  await prisma.admin.upsert({
     where: { email: 'admin@eprintukas.lt' },
     update: {},
-    create: {
-      email: 'admin@eprintukas.lt',
-      password: hashedPassword,
-      name: 'Administratorius',
-      role: 'ADMIN'
-    }
+    create: { email: 'admin@eprintukas.lt', password: hashedPassword, name: 'Administratorius', role: 'ADMIN' }
   });
-  console.log('✅ Admin:', admin.email);
+  console.log('✅ Admin: admin@eprintukas.lt\n');
 
-  // 2. Kategorijos (Roly.eu struktūra)
-  const categories = {};
-  const catData = [
-    { name: 'Marškinėliai', slug: 'marskineliai', sortOrder: 1 },
-    { name: 'Polo marškinėliai', slug: 'polo-marskineliai', sortOrder: 2 },
-    { name: 'Džemperiai', slug: 'dzemperiai', sortOrder: 3 },
-    { name: 'Striukės ir paltai', slug: 'striukes', sortOrder: 4 },
-    { name: 'Kelnės', slug: 'kelnes', sortOrder: 5 },
-    { name: 'Sportinė apranga', slug: 'sportine-apranga', sortOrder: 6 },
-    { name: 'Darbo drabužiai', slug: 'darbo-drabuziai', sortOrder: 7 },
-    { name: 'Aksesuarai', slug: 'aksesuarai', sortOrder: 8 },
-  ];
+  // ============================================
+  // KATEGORIJOS
+  // ============================================
+  const cats = {};
 
-  for (const cat of catData) {
-    categories[cat.slug] = await prisma.category.create({ data: cat });
-  }
-  console.log(`✅ Kategorijos: ${catData.length}`);
+  cats['marskineliai-ir-polo'] = await prisma.category.create({
+    data: { name: 'Marškinėliai ir polo', slug: 'marskineliai-ir-polo', sortOrder: 1 }
+  });
+  cats['marskineliai'] = await prisma.category.create({
+    data: { name: 'Marškinėliai', slug: 'marskineliai', sortOrder: 1, parentId: cats['marskineliai-ir-polo'].id }
+  });
+  cats['polo'] = await prisma.category.create({
+    data: { name: 'Polo marškinėliai', slug: 'polo-marskineliai', sortOrder: 2, parentId: cats['marskineliai-ir-polo'].id }
+  });
 
-  // 3. Produktai (Roly.eu asortimentas)
+  cats['dzemperiai-parent'] = await prisma.category.create({
+    data: { name: 'Džemperiai', slug: 'dzemperiai', sortOrder: 2 }
+  });
+  cats['megztiniai'] = await prisma.category.create({
+    data: { name: 'Megztiniai', slug: 'megztiniai', sortOrder: 1, parentId: cats['dzemperiai-parent'].id }
+  });
+  cats['su-gobtuvu'] = await prisma.category.create({
+    data: { name: 'Su gobtuvu', slug: 'su-gobtuvu', sortOrder: 2, parentId: cats['dzemperiai-parent'].id }
+  });
+
+  cats['striukes-parent'] = await prisma.category.create({
+    data: { name: 'Striukės ir paltai', slug: 'striukes', sortOrder: 3 }
+  });
+  cats['liemenes'] = await prisma.category.create({
+    data: { name: 'Liemenės', slug: 'liemenes', sortOrder: 1, parentId: cats['striukes-parent'].id }
+  });
+  cats['striukes-sub'] = await prisma.category.create({
+    data: { name: 'Striukės', slug: 'striukes-sub', sortOrder: 2, parentId: cats['striukes-parent'].id }
+  });
+
+  cats['kelnes'] = await prisma.category.create({
+    data: { name: 'Kelnės', slug: 'kelnes', sortOrder: 4 }
+  });
+
+  cats['sportine'] = await prisma.category.create({
+    data: { name: 'Sportinė kolekcija', slug: 'sportine-kolekcija', sortOrder: 5 }
+  });
+  cats['sport-mars'] = await prisma.category.create({
+    data: { name: 'Sportiniai marškinėliai', slug: 'sportiniai-marskineliai', sortOrder: 1, parentId: cats['sportine'].id }
+  });
+  cats['sport-kompl'] = await prisma.category.create({
+    data: { name: 'Sportiniai komplektai', slug: 'sportiniai-komplektai', sortOrder: 2, parentId: cats['sportine'].id }
+  });
+
+  console.log('✅ Kategorijos sukurtos\n');
+
+  // ============================================
+  // PRODUKTAI — su gender, daugiau spalvų, XS/5XL dydžiais
+  // ============================================
   const products = [
-    // ── MARŠKINĖLIAI ──────────────────
-    {
-      name: 'Braco',
-      slug: 'braco',
-      sku: 'CA6550',
+    // === MARŠKINĖLIAI (MEN) ===
+    { name: 'Braco', slug: 'braco', sku: 'CA6550', gender: 'MEN',
       description: 'Trumpomis rankovėmis marškinėliai su šoninėmis siūlėmis. Šukuota medvilnė. 1x1 raštuota apvali apykaklė (4 sluoksniai). 180 g/m².',
-      price: 2.85,
-      categorySlug: 'marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.TURQUOISE, COLORS.KELLY_GREEN, COLORS.ORANGE, COLORS.YELLOW, COLORS.HEATHER_GREY, COLORS.ROSETTE],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Atomic 150',
-      slug: 'atomic-150',
-      sku: 'CA6424',
-      description: 'Trumpomis rankovėmis vamzdiniai marškinėliai. 1x1 raštuota apvali apykaklė. 150 g/m². Ekonomiškas pasirinkimas.',
-      price: 1.65,
-      categorySlug: 'marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.KELLY_GREEN, COLORS.ORANGE, COLORS.YELLOW, COLORS.HEATHER_GREY],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Beagle',
-      slug: 'beagle',
-      sku: 'CA6554',
-      description: 'Vamzdiniai trumpomis rankovėmis marškinėliai suaugusiems ir vaikams. 1x1 raštuota apvali apykaklė. 155 g/m².',
-      price: 1.85,
-      categorySlug: 'marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.TURQUOISE, COLORS.KELLY_GREEN, COLORS.ORANGE, COLORS.YELLOW, COLORS.PURPLE, COLORS.ROSETTE, COLORS.SKY_BLUE],
-      sizes: [...ADULT_SIZES, ...KIDS_SIZES],
-    },
-    {
-      name: 'Dogo Premium',
-      slug: 'dogo-premium',
-      sku: 'CA6502',
+      price: 2.85, categoryId: cats['marskineliai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.TURQUOISE, C.KELLY_GREEN, C.ORANGE, C.YELLOW, C.HEATHER_GREY, C.ROSETTE, C.GARNET, C.CHOCOLATE, C.KHAKI, C.GRASS_GREEN, C.DENIM_BLUE, C.DARK_LEAD],
+      sizes: SIZES_XS_5XL },
+
+    { name: 'Atomic 150', slug: 'atomic-150', sku: 'CA6424', gender: 'UNISEX',
+      description: 'Trumpomis rankovėmis vamzdiniai marškinėliai. 1x1 raštuota apvali apykaklė. 150 g/m². Ekonomiškas pasirinkimas didelėms grupėms.',
+      price: 1.65, categoryId: cats['marskineliai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.KELLY_GREEN, C.ORANGE, C.YELLOW, C.HEATHER_GREY, C.TURQUOISE, C.ROSETTE, C.SKY_BLUE, C.PURPLE, C.CREAM],
+      sizes: SIZES_XS_5XL },
+
+    { name: 'Beagle', slug: 'beagle', sku: 'CA6554', gender: 'UNISEX',
+      description: 'Vamzdiniai trumpomis rankovėmis marškinėliai suaugusiems. Su šoninėmis siūlėmis vaikams. 1x1 raštuota apvali apykaklė. 155 g/m².',
+      price: 1.85, categoryId: cats['marskineliai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.TURQUOISE, C.KELLY_GREEN, C.ORANGE, C.YELLOW, C.PURPLE, C.ROSETTE, C.SKY_BLUE, C.CORAL, C.CREAM, C.GRASS_GREEN],
+      sizes: SIZES_XS_4XL },
+
+    { name: 'Dogo Premium', slug: 'dogo-premium', sku: 'CA6502', gender: 'MEN',
       description: 'Premium trumpomis rankovėmis marškinėliai su šoninėmis siūlėmis. 1x1 raštuota apvali apykaklė (4 sluoksniai). 180 g/m².',
-      price: 3.10,
-      categorySlug: 'marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.KELLY_GREEN, COLORS.HEATHER_GREY, COLORS.DENIM_BLUE],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Jamaica',
-      slug: 'jamaica',
-      sku: 'CA6627',
+      price: 3.10, categoryId: cats['marskineliai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.KELLY_GREEN, C.HEATHER_GREY, C.DENIM_BLUE, C.GARNET, C.WINE, C.ANTHRACITE],
+      sizes: SIZES_XS_4XL },
+
+    // === MARŠKINĖLIAI (WOMEN) ===
+    { name: 'Jamaica', slug: 'jamaica', sku: 'CA6627', gender: 'WOMEN',
       description: 'Moteriški trumpomis rankovėmis marškinėliai su siaurėjančiu kirpimu. 1x1 raštuota apvali apykaklė. 160 g/m².',
-      price: 2.95,
-      categorySlug: 'marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROSETTE, COLORS.TURQUOISE, COLORS.HEATHER_GREY, COLORS.LIGHT_PINK],
-      sizes: ['S', 'M', 'L', 'XL', '2XL'],
-    },
-    {
-      name: 'Stafford',
-      slug: 'stafford',
-      sku: 'CA6681',
+      price: 2.95, categoryId: cats['marskineliai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROSETTE, C.TURQUOISE, C.HEATHER_GREY, C.LIGHT_PINK, C.CORAL, C.KELLY_GREEN, C.ROYAL_BLUE, C.SKY_BLUE],
+      sizes: SIZES_XS_2XL },
+
+    { name: 'Stafford', slug: 'stafford', sku: 'CA6681', gender: 'MEN',
       description: 'Vamzdiniai trumpomis rankovėmis marškinėliai. 1x1 raštuota apvali apykaklė. 190 g/m². Storesnė medžiaga.',
-      price: 2.20,
-      categorySlug: 'marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.HEATHER_GREY],
-      sizes: ADULT_SIZES,
-    },
+      price: 2.20, categoryId: cats['marskineliai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.HEATHER_GREY, C.ROYAL_BLUE, C.DARK_LEAD, C.GARNET, C.BOTTLE_GREEN],
+      sizes: SIZES_XS_5XL },
 
-    // ── POLO MARŠKINĖLIAI ──────────────
-    {
-      name: 'Pegaso',
-      slug: 'pegaso',
-      sku: 'PO6603',
-      description: 'Trumpomis rankovėmis polo marškinėliai su trimis sagomis. 100% medvilnė piqué, 240 g/m². Klasikinis kirpimas.',
-      price: 6.50,
-      categorySlug: 'polo-marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.KELLY_GREEN, COLORS.HEATHER_GREY, COLORS.BOTTLE_GREEN],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Star',
-      slug: 'star',
-      sku: 'PO6614',
-      description: 'Moteriški trumpomis rankovėmis polo marškinėliai su trimis sagomis. Moteriško kirpimo. 100% medvilnė piqué, 240 g/m².',
-      price: 6.90,
-      categorySlug: 'polo-marskineliai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROSETTE, COLORS.HEATHER_GREY],
-      sizes: ['S', 'M', 'L', 'XL', '2XL'],
-    },
-    {
-      name: 'Austral',
-      slug: 'austral',
-      sku: 'PO6632',
-      description: 'Trumpomis rankovėmis polo marškinėliai su trimis sagomis. Dviejų spalvų apykaklė. 100% medvilnė piqué, 220 g/m².',
-      price: 5.80,
-      categorySlug: 'polo-marskineliai',
-      colors: [COLORS.WHITE, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.BLACK],
-      sizes: ADULT_SIZES,
-    },
+    // === POLO (MEN) ===
+    { name: 'Pegaso', slug: 'pegaso', sku: 'PO6603', gender: 'MEN',
+      description: 'Trumpomis rankovėmis polo marškinėliai su trimis sagomis. Elastinė apykaklė ir rankogaliai. 240 g/m².',
+      price: 6.50, categoryId: cats['polo'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.KELLY_GREEN, C.HEATHER_GREY, C.BOTTLE_GREEN, C.WINE, C.DENIM_BLUE, C.DARK_LEAD],
+      sizes: SIZES_XS_4XL },
 
-    // ── DŽEMPERIAI ──────────────────────
-    {
-      name: 'Clasica',
-      slug: 'clasica',
-      sku: 'SU1070',
-      description: 'Klasikinis džemperis be gobtuvo. Elastinės rankogalių ir apačios juostos. Šukuota medvilnė, 280 g/m².',
-      price: 8.50,
-      categorySlug: 'dzemperiai',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.HEATHER_GREY],
-      sizes: ALL_SIZES,
-    },
-    {
-      name: 'Urban',
-      slug: 'urban',
-      sku: 'SU1067',
-      description: 'Džemperis su gobtuvu ir kišenėmis. Reguliuojamas gobtuvas su virvele. Kangūros kišenė. 280 g/m².',
-      price: 10.90,
-      categorySlug: 'dzemperiai',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.HEATHER_GREY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.DARK_LEAD],
-      sizes: ALL_SIZES,
-    },
-    {
-      name: 'Capucha',
-      slug: 'capucha',
-      sku: 'SU1024',
-      description: 'Užsegamas džemperis su gobtuvu ir dviem kišenėmis. Pilnas užtrauktukas. 280 g/m². Medvilnė/poliesteris.',
-      price: 12.50,
-      categorySlug: 'dzemperiai',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.HEATHER_GREY, COLORS.RED],
-      sizes: ALL_SIZES,
-    },
+    { name: 'Austral', slug: 'austral', sku: 'PO6632', gender: 'MEN',
+      description: 'Trumpomis rankovėmis polo marškinėliai. Dviejų spalvų apykaklė ir sagų juosta. 220 g/m².',
+      price: 5.80, categoryId: cats['polo'].id,
+      colors: [C.WHITE, C.NAVY, C.RED, C.ROYAL_BLUE, C.BLACK, C.KELLY_GREEN, C.HEATHER_GREY],
+      sizes: SIZES_XS_4XL },
 
-    // ── STRIUKĖS IR PALTAI ─────────────
-    {
-      name: 'Alaska',
-      slug: 'alaska',
-      sku: 'PK5106',
-      description: 'Šilta žieminė parka su gobtuvu ir kailiniu pamušalu. Dviejų krypčių užtrauktukas. Atspari vandeniui.',
-      price: 28.50,
-      categorySlug: 'striukes',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.DARK_LEAD],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Norway',
-      slug: 'norway',
-      sku: 'RA5090',
+    // === DŽEMPERIAI — megztiniai ===
+    { name: 'Clasica', slug: 'clasica', sku: 'SU1070', gender: 'UNISEX',
+      description: 'Klasikinis džemperis be gobtuvo. Elastinės rankogalių ir apačios juostos. Šukuotas vidinis paviršius. 280 g/m².',
+      price: 8.50, categoryId: cats['megztiniai'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.HEATHER_GREY, C.BOTTLE_GREEN, C.GARNET, C.DARK_LEAD, C.KHAKI],
+      sizes: SIZES_XS_5XL },
+
+    // === DŽEMPERIAI — su gobtuvu ===
+    { name: 'Urban', slug: 'urban', sku: 'SU1067', gender: 'UNISEX',
+      description: 'Džemperis su gobtuvu ir kangūros kišene. Elastinės rankogalių ir apačios juostos. 280 g/m².',
+      price: 10.90, categoryId: cats['su-gobtuvu'].id,
+      colors: [C.BLACK, C.NAVY, C.HEATHER_GREY, C.RED, C.ROYAL_BLUE, C.DARK_LEAD, C.BOTTLE_GREEN, C.GARNET, C.WINE, C.KHAKI, C.CHOCOLATE],
+      sizes: SIZES_XS_5XL },
+
+    // === STRIUKĖS ===
+    { name: 'Norway', slug: 'norway', sku: 'RA5090', gender: 'MEN',
       description: 'Dviejų spalvų sportinė striukė su kontrastinėmis detalėmis. Gobtuvas su reguliavimu. Vandeniui atsparus audinys.',
-      price: 18.90,
-      categorySlug: 'striukes',
-      colors: [COLORS.NAVY, COLORS.BLACK, COLORS.RED, COLORS.ROYAL_BLUE],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Bellagio',
-      slug: 'bellagio',
-      sku: 'RA5099',
-      description: 'Lengva neperšlampama liemenė su šoninėmis kišenėmis. Užtrauktukas su apsauga. Tinka pavasariui ir rudeniui.',
-      price: 12.50,
-      categorySlug: 'striukes',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.HEATHER_GREY],
-      sizes: ADULT_SIZES,
-    },
+      price: 18.90, comparePrice: 24.57, categoryId: cats['striukes-sub'].id,
+      colors: [C.NAVY, C.BLACK, C.RED, C.ROYAL_BLUE, C.BOTTLE_GREEN, C.DARK_LEAD],
+      sizes: SIZES_XS_4XL },
 
-    // ── KELNĖS ──────────────────────────
-    {
-      name: 'New Astana',
-      slug: 'new-astana',
-      sku: 'PA1173',
-      description: 'Sportinės kelnės su elastine juosta ir virvele. Dvi šoninės kišenės. Apatinė dalis su elastine juosta. 280 g/m².',
-      price: 8.90,
-      categorySlug: 'kelnes',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.HEATHER_GREY],
-      sizes: ALL_SIZES,
-    },
-    {
-      name: 'Coria',
-      slug: 'coria',
-      sku: 'PA0317',
-      description: 'Trumpos sportinės kelnės (šortai) su elastine juosta ir virvele. Dvi šoninės kišenės. 155 g/m².',
-      price: 5.50,
-      categorySlug: 'kelnes',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.WHITE],
-      sizes: ADULT_SIZES,
-    },
+    // === KELNĖS ===
+    { name: 'New Astana', slug: 'new-astana', sku: 'PA1173', gender: 'UNISEX',
+      description: 'Sportinės kelnės su elastine juosta ir virvele. Du šoniniai kišenės. Elastiniai kulkšnies rankogaliai. 280 g/m².',
+      price: 8.90, categoryId: cats['kelnes'].id,
+      colors: [C.BLACK, C.NAVY, C.HEATHER_GREY, C.DARK_LEAD, C.RED],
+      sizes: SIZES_XS_5XL },
 
-    // ── SPORTINĖ APRANGA ───────────────
-    {
-      name: 'Montecarlo',
-      slug: 'montecarlo',
-      sku: 'CA0423',
-      description: 'Techniniai sportiniai marškinėliai. Greitai džiūstantis audinys. Raglan tipo rankovės. 140 g/m². 100% poliesteris.',
-      price: 3.20,
-      categorySlug: 'sportine-apranga',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.TURQUOISE, COLORS.YELLOW, COLORS.ORANGE, COLORS.KELLY_GREEN],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Bahrain',
-      slug: 'bahrain',
-      sku: 'CA0407',
-      description: 'Techniniai sportiniai marškinėliai su raglan tipo rankovėmis. Kvėpuojantis audinys. 135 g/m². 100% poliesteris.',
-      price: 3.90,
-      categorySlug: 'sportine-apranga',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.KELLY_GREEN, COLORS.ROSETTE],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Detroit',
-      slug: 'detroit',
-      sku: 'CA0652',
-      description: 'Sportinis komplektas: marškinėliai + šortai. Kontrastinės detalės. Kvėpuojantis audinys.',
-      price: 9.50,
-      categorySlug: 'sportine-apranga',
-      colors: [COLORS.WHITE, COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE],
-      sizes: ADULT_SIZES,
-    },
+    { name: 'Coria', slug: 'coria', sku: 'PA0317', gender: 'UNISEX',
+      description: 'Trumpos sportinės kelnės (šortai) su elastine juosta ir virvele. Lengvas audinys. 155 g/m².',
+      price: 5.50, categoryId: cats['kelnes'].id,
+      colors: [C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.WHITE, C.HEATHER_GREY],
+      sizes: SIZES_XS_4XL },
 
-    // ── DARBO DRABUŽIAI ────────────────
-    {
-      name: 'Ritz',
-      slug: 'ritz',
-      sku: 'CM5593',
-      description: 'Vyriški marškiniai ilgomis rankovėmis. Klasikinis kirpimas su apykakle. Tinka darbui ir oficialiam renginiui. 130 g/m².',
-      price: 11.50,
-      categorySlug: 'darbo-drabuziai',
-      colors: [COLORS.WHITE, COLORS.SKY_BLUE, COLORS.BLACK, COLORS.NAVY],
-      sizes: ADULT_SIZES,
-    },
-    {
-      name: 'Vesta',
-      slug: 'vesta',
-      sku: 'CM5558',
-      description: 'Moteriški marškiniai ilgomis rankovėmis. Moteriško kirpimo. Tinka darbui ir oficialiam renginiui. 130 g/m².',
-      price: 11.50,
-      categorySlug: 'darbo-drabuziai',
-      colors: [COLORS.WHITE, COLORS.SKY_BLUE, COLORS.BLACK],
-      sizes: ['S', 'M', 'L', 'XL', '2XL'],
-    },
+    // === SPORTINĖ KOLEKCIJA ===
+    { name: 'Montecarlo', slug: 'montecarlo', sku: 'CA0423', gender: 'MEN',
+      description: 'Techniniai sportiniai marškinėliai. Greitai džiūstantis audinys. Raglan tipo rankovės. Prailginta nugara. 140 g/m².',
+      price: 3.20, categoryId: cats['sport-mars'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.TURQUOISE, C.YELLOW, C.ORANGE, C.KELLY_GREEN, C.CORAL, C.GRASS_GREEN],
+      sizes: SIZES_XS_4XL },
 
-    // ── AKSESUARAI ─────────────────────
-    {
-      name: 'Orion',
-      slug: 'orion',
-      sku: 'BO7109',
-      description: 'Sportinė kuprinė su paminkštintomis petnešomis. Pagrindinis skyrius su užtrauktuku. Priekinė kišenė.',
-      price: 4.90,
-      categorySlug: 'aksesuarai',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.ROYAL_BLUE, COLORS.HEATHER_GREY],
-      sizes: ['Universalus'],
-    },
-    {
-      name: 'Evia',
-      slug: 'evia',
-      sku: 'BO7112',
-      description: 'Lengvas sportinis krepšys su reguliuojama petnešu. Pagrindinis skyrius su užtrauktuku. Šoninė kišenė.',
-      price: 3.90,
-      categorySlug: 'aksesuarai',
-      colors: [COLORS.BLACK, COLORS.NAVY, COLORS.RED, COLORS.TURQUOISE],
-      sizes: ['Universalus'],
-    },
+    { name: 'Bahrain', slug: 'bahrain', sku: 'CA0407', gender: 'MEN',
+      description: 'Techniniai sportiniai marškinėliai su raglan tipo rankovėmis. Control Dry technologija. 135 g/m².',
+      price: 3.90, categoryId: cats['sport-mars'].id,
+      colors: [C.WHITE, C.BLACK, C.NAVY, C.RED, C.ROYAL_BLUE, C.KELLY_GREEN, C.ROSETTE, C.TURQUOISE, C.ORANGE, C.YELLOW, C.CORAL],
+      sizes: SIZES_XS_4XL },
   ];
 
-  let productCount = 0;
+  let count = 0;
   for (const p of products) {
-    const category = categories[p.categorySlug];
-
-    // Sukurti variantus (kiekviena spalva × kiekvienas dydis)
     const variants = [];
     for (const color of p.colors) {
       for (const size of p.sizes) {
@@ -353,11 +226,10 @@ async function main() {
           color: color.name,
           colorHex: color.hex,
           size,
-          stock: Math.floor(Math.random() * 200) + 20, // 20-220 vnt sandėlyje
+          stock: Math.floor(Math.random() * 200) + 20
         });
       }
     }
-
     await prisma.product.create({
       data: {
         name: p.name,
@@ -365,19 +237,19 @@ async function main() {
         sku: p.sku,
         description: p.description,
         price: p.price,
-        comparePrice: Math.random() > 0.7 ? +(p.price * 1.3).toFixed(2) : null, // 30% produktų turi senąją kainą
+        comparePrice: p.comparePrice || (Math.random() > 0.7 ? +(p.price * 1.3).toFixed(2) : null),
         published: true,
-        categoryId: category.id,
+        gender: p.gender,
+        categoryId: p.categoryId,
         variants: { create: variants },
       },
     });
-    productCount++;
-    console.log(`  👕 ${p.name} (${p.sku}) — ${variants.length} variantų`);
+    count++;
+    console.log(`  👕 ${p.name} (${p.sku}) — ${p.gender} — ${p.colors.length} spalvų — ${p.sizes.length} dydžių`);
   }
 
-  console.log(`\n✅ Produktai: ${productCount}`);
-  console.log(`\n🎉 Duomenys sėkmingai sukurti!`);
-  console.log('📧 Admin: admin@eprintukas.lt / admin123');
+  console.log(`\n✅ Produktai: ${count}`);
+  console.log('🎉 Duomenys sėkmingai sukurti!');
 }
 
 main()
