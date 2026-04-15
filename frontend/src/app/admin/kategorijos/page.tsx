@@ -40,22 +40,22 @@ export default function AdminCategoriesPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Kategorijos ({categories.length})</h1>
-        <button onClick={() => openForm()} className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-5 py-2 rounded-lg text-sm">+ Nauja kategorija</button>
+        <button onClick={() => openForm()} className="bg-black hover:bg-gray-800 text-white font-medium px-5 py-2  text-sm">+ Nauja kategorija</button>
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="bg-white border border-gray-200  p-6 mb-6">
           <h2 className="font-semibold text-gray-900 mb-4">{editingCat ? "Redaguoti" : "Nauja kategorija"}</h2>
           <div className="flex gap-3">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Kategorijos pavadinimas"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
-            <button onClick={handleSave} disabled={saving || !name} className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white font-medium px-6 py-2 rounded-lg text-sm">{saving ? "..." : "Išsaugoti"}</button>
-            <button onClick={() => setShowForm(false)} className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Atšaukti</button>
+              className="flex-1 px-3 py-2 border border-gray-300  focus:ring-2 focus:ring-gray-900 outline-none text-sm" />
+            <button onClick={handleSave} disabled={saving || !name} className="bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white font-medium px-6 py-2  text-sm">{saving ? "..." : "Išsaugoti"}</button>
+            <button onClick={() => setShowForm(false)} className="border border-gray-300 text-gray-700 px-4 py-2  text-sm hover:bg-gray-50">Atšaukti</button>
           </div>
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-200  overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
             <tr>
@@ -83,3 +83,5 @@ export default function AdminCategoriesPage() {
     </div>
   );
 }
+
+

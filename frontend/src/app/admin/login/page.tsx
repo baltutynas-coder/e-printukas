@@ -40,27 +40,27 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <span className="text-4xl">🖨️</span>
-          <h1 className="text-2xl font-bold text-gray-900 mt-4">e.<span className="text-emerald-600">printukas</span>.lt</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mt-4">e.<span className="text-gray-900">printukas</span>.lt</h1>
           <p className="text-gray-500 mt-2">Admin prisijungimas</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white  shadow-sm border border-gray-200 p-8">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-6">{error}</div>
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3  mb-6">{error}</div>
           )}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">El. paštas</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@eprintukas.lt" required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
+                className="w-full px-4 py-2.5 border border-gray-300  focus:ring-2 focus:ring-gray-900 focus:border-black outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Slaptažodis</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
+                className="w-full px-4 py-2.5 border border-gray-300  focus:ring-2 focus:ring-gray-900 focus:border-black outline-none" />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white font-semibold py-3 rounded-lg transition-colors">
+              className="w-full bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white font-semibold py-3  transition-colors">
               {loading ? "Jungiamasi..." : "Prisijungti"}
             </button>
           </form>
@@ -69,3 +69,5 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+
+

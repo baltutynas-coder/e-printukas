@@ -129,14 +129,14 @@ export default function AdminProductsPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Produktai ({products.length})</h1>
-        <button onClick={() => openForm()} className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-5 py-2 rounded-lg transition-colors text-sm">
+        <button onClick={() => openForm()} className="bg-black hover:bg-gray-800 text-white font-medium px-5 py-2  transition-colors text-sm">
           + Naujas produktas
         </button>
       </div>
 
       {/* Forma */}
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="bg-white border border-gray-200  p-6 mb-6">
           <h2 className="font-semibold text-gray-900 mb-4">
             {editingProduct ? "Redaguoti produktą" : "Naujas produktas"}
           </h2>
@@ -144,12 +144,12 @@ export default function AdminProductsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pavadinimas *</label>
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="Pvz: Braco" />
+                className="w-full px-3 py-2 border border-gray-300  focus:ring-2 focus:ring-gray-900 outline-none text-sm" placeholder="Pvz: Braco" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Kategorija</label>
               <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                className="w-full px-3 py-2 border border-gray-300  focus:ring-2 focus:ring-gray-900 outline-none text-sm">
                 <option value="">-- Pasirinkti --</option>
                 {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
               </select>
@@ -157,29 +157,29 @@ export default function AdminProductsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Kaina (€) *</label>
               <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="3.50" />
+                className="w-full px-3 py-2 border border-gray-300  focus:ring-2 focus:ring-gray-900 outline-none text-sm" placeholder="3.50" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Sena kaina (€)</label>
               <input type="number" step="0.01" value={form.comparePrice} onChange={(e) => setForm({ ...form, comparePrice: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="4.99" />
+                className="w-full px-3 py-2 border border-gray-300  focus:ring-2 focus:ring-gray-900 outline-none text-sm" placeholder="4.99" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Aprašymas</label>
               <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm" placeholder="Produkto aprašymas..." />
+                className="w-full px-3 py-2 border border-gray-300  focus:ring-2 focus:ring-gray-900 outline-none text-sm" placeholder="Produkto aprašymas..." />
             </div>
             <div className="flex items-center gap-2">
-              <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} id="published" className="w-4 h-4 text-emerald-500 rounded" />
+              <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} id="published" className="w-4 h-4 text-black rounded" />
               <label htmlFor="published" className="text-sm text-gray-700">Publikuotas</label>
             </div>
           </div>
           <div className="flex gap-3 mt-6">
             <button onClick={handleSave} disabled={saving || !form.name || !form.price}
-              className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 text-white font-medium px-6 py-2 rounded-lg text-sm transition-colors">
+              className="bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white font-medium px-6 py-2  text-sm transition-colors">
               {saving ? "Saugoma..." : "Išsaugoti"}
             </button>
-            <button onClick={() => setShowForm(false)} className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+            <button onClick={() => setShowForm(false)} className="border border-gray-300 text-gray-700 px-6 py-2  text-sm hover:bg-gray-50 transition-colors">
               Atšaukti
             </button>
           </div>
@@ -189,13 +189,13 @@ export default function AdminProductsPage() {
       {/* Produktų lentelė */}
       <div className="space-y-4">
         {products.map((product) => (
-          <div key={product.id} className="bg-white border border-gray-200 rounded-xl p-4">
+          <div key={product.id} className="bg-white border border-gray-200  p-4">
             <div className="flex items-start gap-4">
               {/* Nuotraukos */}
               <div className="flex gap-2 shrink-0">
                 {product.images?.map((img: any) => (
                   <div key={img.id} className="relative group">
-                    <img src={img.url} alt={img.alt || product.name} className="w-16 h-16 object-cover rounded-lg border border-gray-200" />
+                    <img src={img.url} alt={img.alt || product.name} className="w-16 h-16 object-cover  border border-gray-200" />
                     <button
                       onClick={() => handleImageDelete(img.id)}
                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -203,7 +203,7 @@ export default function AdminProductsPage() {
                   </div>
                 ))}
                 {/* Įkelti nuotrauką */}
-                <label className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-colors">
+                <label className="w-16 h-16 border-2 border-dashed border-gray-300  flex items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors">
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
@@ -229,7 +229,7 @@ export default function AdminProductsPage() {
                   <span className="text-xs text-gray-400 font-mono">{product.sku}</span>
                   <button onClick={() => togglePublished(product)}>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                      product.published ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-600"
+                      product.published ? "bg-gray-100 text-gray-800" : "bg-gray-100 text-gray-600"
                     }`}>
                       {product.published ? "Aktyvus" : "Juodraštis"}
                     </span>
@@ -255,10 +255,10 @@ export default function AdminProductsPage() {
 
               {/* Veiksmai */}
               <div className="flex gap-2 shrink-0">
-                <button onClick={() => openForm(product)} className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+                <button onClick={() => openForm(product)} className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-200  hover:bg-blue-50 transition-colors">
                   Redaguoti
                 </button>
-                <button onClick={() => handleDelete(product.id, product.name)} className="text-sm text-red-500 hover:text-red-700 px-3 py-1 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                <button onClick={() => handleDelete(product.id, product.name)} className="text-sm text-red-500 hover:text-red-700 px-3 py-1 border border-red-200  hover:bg-red-50 transition-colors">
                   Trinti
                 </button>
               </div>
@@ -269,3 +269,5 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
+

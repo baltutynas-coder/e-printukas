@@ -8,7 +8,7 @@ const statuses = [
   { value: "PAID", label: "Apmokėta", color: "bg-green-100 text-green-800" },
   { value: "PROCESSING", label: "Ruošiama", color: "bg-blue-100 text-blue-800" },
   { value: "SHIPPED", label: "Išsiųsta", color: "bg-purple-100 text-purple-800" },
-  { value: "DELIVERED", label: "Pristatyta", color: "bg-emerald-100 text-emerald-800" },
+  { value: "DELIVERED", label: "Pristatyta", color: "bg-gray-100 text-gray-800" },
   { value: "CANCELLED", label: "Atšaukta", color: "bg-red-100 text-red-800" },
 ];
 
@@ -36,9 +36,9 @@ export default function AdminOrdersPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Užsakymai ({orders.length})</h1>
 
       {orders.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400">Užsakymų dar nėra</div>
+        <div className="bg-white border border-gray-200  p-10 text-center text-gray-400">Užsakymų dar nėra</div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-200  overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
               <tr>
@@ -78,7 +78,7 @@ export default function AdminOrdersPage() {
       )}
 
       {selectedOrder && (
-        <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6">
+        <div className="mt-6 bg-white border border-gray-200  p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Užsakymas {selectedOrder.orderNumber}</h2>
           <div className="grid grid-cols-2 gap-4 text-sm mb-4">
             <div><span className="text-gray-500">Klientas:</span> {selectedOrder.customerName}</div>
@@ -106,3 +106,5 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
+
+
