@@ -64,7 +64,7 @@ export default function CategoryPage({
 
   // Gauti kategorijas
   useEffect(() => {
-    fetch("http://localhost:4000/api/categories")
+    fetch("https://e-printukas-production.up.railway.app/api/categories")
       .then((r) => r.json())
       .then((d) => setCategories(d.categories || []))
       .catch(() => {});
@@ -72,7 +72,7 @@ export default function CategoryPage({
 
   // Gauti VISUS produktus (skaičiams)
   useEffect(() => {
-    fetch("http://localhost:4000/api/products?limit=100")
+    fetch("https://e-printukas-production.up.railway.app/api/products?limit=100")
       .then((r) => r.json())
       .then((d) => {
         const withImages = (d.products || []).filter(
@@ -90,7 +90,7 @@ export default function CategoryPage({
     setSelectedSizes([]);
     setSelectedColors([]);
     setSelectedGenders([]);
-    fetch(`http://localhost:4000/api/products?category=${slug}&limit=50`)
+    fetch(`https://e-printukas-production.up.railway.app/api/products?category=${slug}&limit=50`)
       .then((r) => r.json())
       .then((d) => {
         const withImages = (d.products || []).filter(
