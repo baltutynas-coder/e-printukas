@@ -12,7 +12,7 @@ export default function AdminCategoriesPage() {
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    try { const res = await fetch("http://localhost:4000/api/categories"); const data = await res.json(); setCategories(data.categories || []); } catch (e) { console.error(e); }
+    try { const res = await fetch("https://TAVO-RAILWAY-URL/api/categories"); const data = await res.json(); setCategories(data.categories || []); } catch (e) { console.error(e); }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -83,5 +83,6 @@ export default function AdminCategoriesPage() {
     </div>
   );
 }
+
 
 

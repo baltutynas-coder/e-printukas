@@ -155,3 +155,4 @@ export default function WorkwearPromo({ products }: WorkwearPromoProps) {
     </section>
   );
 }
+

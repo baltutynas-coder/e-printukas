@@ -42,7 +42,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/orders", {
+      const res = await fetch("https://TAVO-RAILWAY-URL/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -234,3 +234,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
