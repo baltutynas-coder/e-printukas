@@ -41,6 +41,16 @@ const menuCategories = [
       { name: "Sportiniai komplektai", slug: "sportiniai-komplektai" },
     ],
   },
+  {
+    name: "Darbo drabužiai",
+    slug: "darbo-drabuziai",
+    children: [
+      { name: "Signaliniai drabužiai", slug: "signaliniai-drabuziai" },
+      { name: "HORECA", slug: "horeca" },
+      { name: "Pramonė", slug: "pramone" },
+      { name: "Medicina ir grožis", slug: "medicina-ir-grozis" },
+    ],
+  },
 ];
 
 export default function Header() {
@@ -163,9 +173,16 @@ export default function Header() {
                 type="text"
                 placeholder="Ieškoti produktų..."
                 autoFocus
-                className="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-gray-500 placeholder-gray-500"
+                className="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 focus:outline-none focus:border-gray-500 placeholder-gray-500"
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setSearchOpen(false);
+                  if (e.key === "Enter") {
+                    const value = (e.target as HTMLInputElement).value.trim();
+                    if (value) {
+                      setSearchOpen(false);
+                      window.location.href = `/paieska?q=${encodeURIComponent(value)}`;
+                    }
+                  }
                 }}
               />
             </div>

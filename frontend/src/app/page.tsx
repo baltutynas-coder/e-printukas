@@ -3,7 +3,7 @@ import Link from "next/link";
 
 async function getProducts() {
   try {
-    const res = await fetch("http://localhost:4000/api/products?limit=24", { cache: "no-store" });
+    const res = await fetch("http://localhost:4000/api/products?limit=50", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
     const data = await res.json();
     return data.products;
@@ -25,10 +25,23 @@ async function getCategories() {
   }
 }
 
+// Sumaišyti masyvą (Fisher-Yates)
+function shuffle(arr: any[]) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default async function Home() {
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  const productsWithImages = products.filter((p: any) => p.images && p.images.length > 0);
+  const allProducts = products.filter((p: any) => p.images && p.images.length > 0);
   const parentCategories = categories.filter((c: any) => !c.parentId);
+
+  // 9 random produktų iš visų kategorijų
+  const randomProducts = shuffle(allProducts).slice(0, 9);
 
   return (
     <div>
@@ -36,8 +49,8 @@ export default async function Home() {
       <section className="relative bg-black text-white overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
         <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center" />
-        <div className="relative z-20 max-w-7xl mx-auto px-6 py-32 sm:py-44">
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight max-w-xl">
+        <div className="relative z-20 max-w-7xl mx-auto px-6 py-28 sm:py-40">
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight max-w-xl font-[family-name:var(--font-montserrat)]">
             Kokybiški drabužiai
             <span className="block">jūsų verslui</span>
           </h1>
@@ -48,39 +61,42 @@ export default async function Home() {
             href="#produktai"
             className="inline-block mt-8 bg-white text-black font-bold px-8 py-3.5 text-sm uppercase tracking-wider hover:bg-gray-200 transition-colors"
           >
-            Žiūrėti katalogą →
+            Žiūrėti prekes →
           </Link>
         </div>
       </section>
 
-      {/* Kategorijos — 3 kortelės */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/kategorija/marskineliai-ir-polo" className="group relative overflow-hidden aspect-[4/5]">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center group-hover:scale-105 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-6 left-6 z-10">
-              <span className="text-white text-2xl font-bold">Marškinėliai ir polo</span>
+      {/* 3 kategorijų kortelės */}
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Link href="/kategorija/marskineliai-ir-polo" className="group relative overflow-hidden aspect-[4/3] bg-black">
+            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
+              <span className="text-white text-2xl font-black font-[family-name:var(--font-montserrat)] uppercase">Marškinėliai</span>
+              <span className="text-white text-2xl font-black font-[family-name:var(--font-montserrat)] uppercase -mt-1">ir polo</span>
+              <span className="text-white/50 text-xs uppercase tracking-widest mt-2">Žiūrėti kolekciją →</span>
             </div>
           </Link>
-          <Link href="/kategorija/dzemperiai" className="group relative overflow-hidden aspect-[4/5]">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_mujer_2026_04.jpg')] bg-cover bg-center group-hover:scale-105 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-6 left-6 z-10">
-              <span className="text-white text-2xl font-bold">Džemperiai ir striukės</span>
+          <Link href="/kategorija/dzemperiai" className="group relative overflow-hidden aspect-[4/3] bg-black">
+            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_mujer_2026_04.jpg')] bg-cover bg-center opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
+              <span className="text-white text-2xl font-black font-[family-name:var(--font-montserrat)] uppercase">Džemperiai</span>
+              <span className="text-white text-2xl font-black font-[family-name:var(--font-montserrat)] uppercase -mt-1">ir striukės</span>
+              <span className="text-white/50 text-xs uppercase tracking-widest mt-2">Žiūrėti kolekciją →</span>
             </div>
           </Link>
-          <Link href="/kategorija/sportine-kolekcija" className="group relative overflow-hidden aspect-[4/5]">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_ninos_2026_04.jpg')] bg-cover bg-center group-hover:scale-105 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-6 left-6 z-10">
-              <span className="text-white text-2xl font-bold">Sportinė kolekcija</span>
+          <Link href="/kategorija/sportine-kolekcija" className="group relative overflow-hidden aspect-[4/3] bg-black">
+            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_ninos_2026_04.jpg')] bg-cover bg-center opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
+              <span className="text-white text-2xl font-black font-[family-name:var(--font-montserrat)] uppercase">Sportinė</span>
+              <span className="text-white text-2xl font-black font-[family-name:var(--font-montserrat)] uppercase -mt-1">kolekcija</span>
+              <span className="text-white/50 text-xs uppercase tracking-widest mt-2">Žiūrėti kolekciją →</span>
             </div>
           </Link>
         </div>
       </section>
 
-      {/* Kategorijų mygtukai — tik pagrindinės */}
+      {/* Kategorijų mygtukai */}
       <section className="max-w-7xl mx-auto px-4 pb-8">
         <div className="flex flex-wrap gap-3 justify-center">
           {parentCategories.map((cat: any) => (
@@ -95,13 +111,13 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Produktai */}
+      {/* Rekomenduojamos prekės — 9 random iš visų kategorijų */}
       <section id="produktai" className="max-w-7xl mx-auto px-4 pb-20">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-black uppercase tracking-tight">Naujausi produktai</h2>
-          <span className="text-sm text-gray-400">{productsWithImages.length} produktų</span>
+        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+          <h2 className="text-xl font-black uppercase tracking-tight font-[family-name:var(--font-montserrat)]">Rekomenduojamos prekės</h2>
+          <span className="text-sm text-gray-400">{randomProducts.length} produktų</span>
         </div>
-        <ProductGrid products={productsWithImages} />
+        <ProductGrid products={randomProducts} />
       </section>
     </div>
   );

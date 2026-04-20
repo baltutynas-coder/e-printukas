@@ -36,6 +36,8 @@ const COLOR_CODES: Record<string, string> = {
   "#004237": "56", "#51A025": "264", "#F08927": "31", "#FFE400": "03",
   "#C4C4C4": "58", "#484E41": "46", "#DC006B": "78", "#F8CCD5": "48",
   "#750D68": "71", "#8C1713": "57", "#573D2A": "67", "#4C6781": "231",
+  "#F5F0E1": "132", "#722F37": "116", "#6B7532": "15", "#F0786B": "169",
+  "#3D3D3D": "38",
 };
 
 export default function ProductDetails({ product }: { product: Product }) {
