@@ -27,7 +27,7 @@ export default function AdminProductsPage() {
 
   const loadCategories = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/categories");
+      const res = await fetch("https://e-printukas-production.up.railway.app/api/categories");
       const data = await res.json();
       setCategories(data.categories || []);
     } catch (e) { console.error(e); }
@@ -102,7 +102,7 @@ export default function AdminProductsPage() {
       formData.append("productId", productId);
 
       try {
-        await fetch("http://localhost:4000/api/upload", {
+        await fetch("https://e-printukas-production.up.railway.app/api/upload", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,

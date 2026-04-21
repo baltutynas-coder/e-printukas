@@ -5,7 +5,7 @@ import Link from "next/link";
 
 async function getProducts() {
   try {
-    const res = await fetch("http://localhost:4000/api/products?limit=50", { cache: "no-store" });
+    const res = await fetch("https://e-printukas-production.up.railway.app/api/products?limit=50", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
     const data = await res.json();
     return data.products;
@@ -17,7 +17,7 @@ async function getProducts() {
 
 async function getCategories() {
   try {
-    const res = await fetch("http://localhost:4000/api/categories", { cache: "no-store" });
+    const res = await fetch("https://e-printukas-production.up.railway.app/api/categories", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti kategorijų");
     const data = await res.json();
     return data.categories;

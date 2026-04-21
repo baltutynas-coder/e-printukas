@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 
 async function getProduct(slug: string) {
   try {
-    const res = await fetch(`http://localhost:4000/api/products/${slug}`, { cache: "no-store" });
+    const res = await fetch(`https://e-printukas-production.up.railway.app/api/products/${slug}`, { cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     return data.product;
@@ -16,7 +16,7 @@ async function getProduct(slug: string) {
 
 async function getCategories() {
   try {
-    const res = await fetch("http://localhost:4000/api/categories", { cache: "no-store" });
+    const res = await fetch("https://e-printukas-production.up.railway.app/api/categories", { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     return data.categories || [];
@@ -27,7 +27,7 @@ async function getCategories() {
 
 async function getRelatedProducts(categorySlug: string, currentSlug: string) {
   try {
-    const res = await fetch(`http://localhost:4000/api/products?category=${categorySlug}&limit=6`, { cache: "no-store" });
+    const res = await fetch(`https://e-printukas-production.up.railway.app/api/products?category=${categorySlug}&limit=6`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.products || [])

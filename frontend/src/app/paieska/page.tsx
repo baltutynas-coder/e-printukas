@@ -15,7 +15,7 @@ function SearchResults() {
   useEffect(() => {
     if (!query) { setLoading(false); return; }
     setLoading(true);
-    fetch(`http://localhost:4000/api/products?search=${encodeURIComponent(query)}&limit=50`)
+    fetch(`https://e-printukas-production.up.railway.app/api/products?search=${encodeURIComponent(query)}&limit=50`)
       .then((r) => r.json())
       .then((d) => {
         const withImages = (d.products || []).filter((p: any) => p.images && p.images.length > 0);
