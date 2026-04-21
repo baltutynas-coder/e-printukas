@@ -6,19 +6,19 @@ import Link from "next/link";
 // Slide'ai su versliškais vaizdais
 const slides = [
   {
-    image: "https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg",
+    image: "https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758110/eprintukas/banners/Banner_hombre.jpg",
     title: ["Kokybiški drabužiai", "jūsų verslui"],
     subtitle: "Marškinėliai, polo, džemperiai ir kita tekstilė. Platus spalvų ir dydžių pasirinkimas.",
     cta: { text: "Žiūrėti prekes →", href: "#produktai" },
   },
   {
-    image: "https://static.gorfactory.es/images/home/slider_epiro_sparta.jpg",
+    image: "https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758115/eprintukas/banners/slider_epiro_sparta.jpg",
     title: ["Nauja kolekcija", "2026"],
     subtitle: "Atraskite naujausius modelius ir spalvas. Profesionali apranga kiekvienai progai.",
     cta: { text: "Atrasti naujienas →", href: "/kategorija/marskineliai-ir-polo" },
   },
   {
-    image: "https://static.gorfactory.es/images/home/Banner_abrigos_2026_04.jpg",
+    image: "https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758117/eprintukas/banners/Banner_abrigos.jpg",
     title: ["Darbo drabužiai", "ir uniformos"],
     subtitle: "Signaliniai drabužiai, HORECA uniformos, medicinos aprangos. Saugūs ir patogūs darbo aplinkoje.",
     cta: { text: "Darbo drabužiai →", href: "/kategorija/darbo-drabuziai" },

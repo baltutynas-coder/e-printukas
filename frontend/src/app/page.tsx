@@ -5,7 +5,7 @@ import Link from "next/link";
 
 async function getProducts() {
   try {
-    const res = await fetch("https://TAVO-RAILWAY-URL/api/products?limit=50", { cache: "no-store" });
+    const res = await fetch("http://localhost:4000/api/products?limit=50", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
     const data = await res.json();
     return data.products;
@@ -17,7 +17,7 @@ async function getProducts() {
 
 async function getCategories() {
   try {
-    const res = await fetch("https://TAVO-RAILWAY-URL/api/categories", { cache: "no-store" });
+    const res = await fetch("http://localhost:4000/api/categories", { cache: "no-store" });
     if (!res.ok) throw new Error("Nepavyko gauti kategorijų");
     const data = await res.json();
     return data.categories;
@@ -57,28 +57,28 @@ export default async function Home() {
       <section className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Link href="/kategorija/marskineliai-ir-polo" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_hombre_2026_04.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758110/eprintukas/banners/Banner_hombre.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
             <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
               <span className="text-white text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Marškinėliai ir polo</span>
               <span className="text-white/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
             </div>
           </Link>
           <Link href="/kategorija/dzemperiai" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_mujer_2026_04.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758112/eprintukas/banners/Banner_mujer.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
             <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
               <span className="text-white text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Džemperiai ir striukės</span>
               <span className="text-white/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
             </div>
           </Link>
           <Link href="/kategorija/sportine-kolekcija" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_sportcollection_2026_04.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758118/eprintukas/banners/Banner_sportcollection.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
             <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
               <span className="text-white text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Sportinė kolekcija</span>
               <span className="text-white/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
             </div>
           </Link>
           <Link href="/kategorija/darbo-drabuziai" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://static.gorfactory.es/images/home/Banner_abrigos_2026_04.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
+            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758117/eprintukas/banners/Banner_abrigos.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
             <div className="absolute inset-0 bg-gradient-to-t from-amber-900/50 via-transparent to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
               <span className="text-amber-400 text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Darbo drabužiai</span>
