@@ -1,5 +1,197 @@
+/* ========================================================================
+   e.printukas.lt — Global styles + Design tokens
+   Tailwind v4 (CSS-first config per @theme direktyvą)
+   
+   Filosofija: juoda/cream bazė + tik vienas akcentas (oranžinis D0591E).
+   Mažai spalvų, daug oro, didelė techniška tipografija — TRUEWERK DNR.
+   ======================================================================== */
+
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ------------------------------------------------------------------------
+   1. DESIGN TOKENS
+   ------------------------------------------------------------------------
+   Tailwind v4 automatiškai sukuria utility klases iš @theme kintamųjų:
+   --color-ink      → bg-ink, text-ink, border-ink, ring-ink
+   --color-paper    → bg-paper, text-paper
+   --font-display   → font-display
+   --radius-lg      → rounded-lg
+   ------------------------------------------------------------------------ */
+
+@theme {
+  /* — Neutralūs tonai (bazė) — */
+  --color-ink: #0E0E0E;           /* beveik juoda — pagrindinis tekstas, footer, hero */
+  --color-graphite: #1F1F1C;      /* antracitas — kortelės, hero fonas */
+  --color-paper: #F5F2EA;         /* šilta cream — pagrindinis fonas */
+  --color-paper-soft: #EFEBE1;    /* tamsesnis cream — sekcijų skirtukas */
+  --color-muted: #6B6B66;         /* antrinis tekstas, aprašymai */
+  --color-line: #E8E4DC;          /* linijos, borderi, dividers */
+  --color-line-strong: #CFCBC1;   /* ryškesnė linija — hover, aktyvūs borderi */
+
+  /* — Akcento spalvos — */
+  --color-accent: #D0591E;        /* rimta darbo oranžinė — CTA, mygtukai, nuorodos */
+  --color-accent-soft: #F9E4D5;   /* subtili akcento dimensija — hover fonas */
+  --color-accent-dark: #9C3F10;   /* akcento sustiprinimas — active, focus */
+  --color-hi-vis: #E8A33D;        /* Hi-Vis geltona — "NAUJIENA", "IŠPARDAVIMAS" badge'ai */
+
+  /* — Semantinės (būsenų) — */
+  --color-success: #0F6E56;       /* sandėlyje, užsakymas patvirtintas */
+  --color-success-soft: #D4EDE3;
+  --color-warning: #B8751F;       /* mažas kiekis sandėlyje */
+  --color-error: #A32D2D;         /* klaidos, nebūtina laukimo būsena */
+  --color-error-soft: #F5D7D7;
+
+  /* — Tipografija — */
+  /* next/font/google variables (setup'inami layout.tsx) */
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* — Tarpai (8pt sistema) — 
+     Tailwind v4 jau turi savo spacing scale'ą (p-1 = 4px, p-2 = 8px...),
+     bet pridedame kastomizuotus dydžius didelėms sekcijoms. */
+  --spacing-section-sm: 48px;     /* mažos sekcijos (mobile) */
+  --spacing-section: 96px;        /* pagrindinis sekcijų atstumas */
+  --spacing-section-lg: 144px;    /* hero, dideli breakpoint'ai */
+
+  /* — Radijusai — */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-2xl: 32px;
+
+  /* — Šešėliai — labai subtilūs, TRUEWERK nesimėto blizgomis */
+  --shadow-sm: 0 1px 2px rgba(14, 14, 14, 0.06);
+  --shadow-md: 0 4px 12px rgba(14, 14, 14, 0.08);
+  --shadow-lg: 0 12px 32px rgba(14, 14, 14, 0.10);
+  --shadow-accent: 0 4px 14px rgba(208, 89, 30, 0.25);
+
+  /* — Pereinai (transitions) — */
+  --transition-fast: 150ms ease-out;
+  --transition-base: 250ms ease-out;
+  --transition-slow: 400ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* — Container max-widths — */
+  --container-prose: 720px;
+  --container-content: 1180px;
+  --container-wide: 1440px;
+}
+
+/* ------------------------------------------------------------------------
+   2. BAZINIS PUSLAPIO STILIUS
+   ------------------------------------------------------------------------ */
+
+html {
+  /* Sklandus scroll, kai navigacija veda į anchor'us */
+  scroll-behavior: smooth;
+  /* Kad mobiliam Safari neužlaikytų CLS */
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
-  font-family: var(--font-geist-sans), Arial, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  font-feature-settings: 'kern', 'liga', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Antraštės — display šriftas, TRUEWERK stiliumi (tight, techniška) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+/* Nuorodos — subtilios, paryškėja ant hover'io */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+/* ------------------------------------------------------------------------
+   3. SELECTION — tekstas pažymėjimo spalva
+   ------------------------------------------------------------------------ */
+
+::selection {
+  background-color: var(--color-accent);
+  color: #FFFFFF;
+}
+
+/* ------------------------------------------------------------------------
+   4. FOCUS — accessibility (WCAG AA)
+   Visi focusable elementai turi aiškų focus ring'ą, bet tik klaviatūros
+   navigacijai (ne pele), tad :focus-visible.
+   ------------------------------------------------------------------------ */
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------------------------------
+   5. SCROLLBAR — subtili, cream fonas
+   ------------------------------------------------------------------------ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* ------------------------------------------------------------------------
+   6. REDUCED MOTION — accessibility
+   Kai vartotojas OS nustatymuose įjungęs "prefers-reduced-motion",
+   išjungiam visas animacijas.
+   ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   7. NAUDOJIMUI PATOGIOS KLASĖS
+   ------------------------------------------------------------------------ */
+
+/* Konteineris su maksimaliu pločiu — pagrindinis content wrapper */
+.container-content {
+  width: 100%;
+  max-width: var(--container-content);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container-content { padding-inline: 2rem; }
+}
+
+@media (min-width: 1280px) {
+  .container-content { padding-inline: 2.5rem; }
 }
