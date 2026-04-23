@@ -8,3 +8,6 @@ frontend/public/images/*.jpg
 frontend/public/images/*.png
 frontend/public/images/*.webp
 !frontend/public/images/.gitkeep
+
+# Roly konfidencialûs kainoraðèiai
+pricelist-*.xlsx
