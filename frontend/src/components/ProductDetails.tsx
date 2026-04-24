@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * ProductDetails — produkto detalių client komponentas.
+ *
+ * Sprint 4.1.1 pataisymas — SĄŽININGI DUOMENYS:
+ *   - Pašalinta fake „100% medvilnė" placeholder'io (nes 46% produktų tai netiesa)
+ *   - Pašalinta fake „50 vnt dėžėje" pakuotės info (nežinome tikrai)
+ *   - Dabar rodome tik tai, ką tikrai žinome iš DB:
+ *     - Techninė informacija (kategorija, SKU, spalvų ir dydžių skaičius)
+ *     - Aprašymas (jei yra — gali būti anglų k.)
+ *   - Jei aprašymas tuščias — tos eilutės tiesiog nerodome
+ *
+ * Dizainas (TRUEWERK DNR) nekeičiamas.
+ * Logika (cart, spalvų/dydžių pasirinkimas) nekeičiama.
+ */
+
 import { useState, useMemo } from "react";
 import { useCartStore } from "@/lib/cartStore";
 
@@ -29,7 +44,6 @@ interface Product {
   variants: Variant[];
 }
 
-// Spalvų kodų žemėlapis (Roly stilius)
 const COLOR_CODES: Record<string, string> = {
   "#FFFFFF": "01", "#000000": "02", "#001D43": "55", "#DC002E": "60",
   "#0060A9": "05", "#C4DDF1": "86", "#00A0D1": "12", "#008F4F": "83",
@@ -43,18 +57,31 @@ const COLOR_CODES: Record<string, string> = {
 export default function ProductDetails({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem);
 
-  const uniqueColors = useMemo(() => [...new Map(
-    product.variants.map((v) => [v.colorHex, { color: v.color, hex: v.colorHex }])
-  ).values()], [product.variants]);
+  const uniqueColors = useMemo(
+    () =>
+      [
+        ...new Map(
+          product.variants.map((v) => [
+            v.colorHex,
+            { color: v.color, hex: v.colorHex },
+          ])
+        ).values(),
+      ],
+    [product.variants]
+  );
 
-  const [selectedColor, setSelectedColor] = useState(uniqueColors[0]?.hex || "");
+  const [selectedColor, setSelectedColor] = useState(
+    uniqueColors[0]?.hex || ""
+  );
 
-  const selectedColorName = uniqueColors.find((c) => c.hex === selectedColor)?.color || "";
+  const selectedColorName =
+    uniqueColors.find((c) => c.hex === selectedColor)?.color || "";
 
   const currentImage = useMemo(() => {
     if (!product.images || product.images.length === 0) return null;
-    const colorImage = product.images.find((img) =>
-      img.alt && img.alt.toLowerCase() === selectedColorName.toLowerCase()
+    const colorImage = product.images.find(
+      (img) =>
+        img.alt && img.alt.toLowerCase() === selectedColorName.toLowerCase()
     );
     return colorImage || product.images[0];
   }, [product.images, selectedColorName]);
@@ -63,35 +90,37 @@ export default function ProductDetails({ product }: { product: Product }) {
     .filter((v) => v.colorHex === selectedColor)
     .map((v) => ({ size: v.size, stock: v.stock }));
 
-  const [selectedSize, setSelectedSize] = useState(sizesForColor[0]?.size || "");
+  const [selectedSize, setSelectedSize] = useState(
+    sizesForColor[0]?.size || ""
+  );
+
   const selectedVariant = product.variants.find(
     (v) => v.colorHex === selectedColor && v.size === selectedSize
   );
 
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(10);
   const [added, setAdded] = useState(false);
 
-  // Accordion sekcijos
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     tech: false,
-    composition: false,
-    packaging: false,
+    description: false,
   });
 
   const toggleSection = (key: string) => {
-    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleColorChange = (hex: string) => {
     setSelectedColor(hex);
     const firstSize = product.variants.find((v) => v.colorHex === hex);
     if (firstSize) setSelectedSize(firstSize.size);
-    setQuantity(1);
+    setQuantity(10);
   };
 
   const handleAddToCart = () => {
     if (!selectedVariant) return;
-    const colorName = uniqueColors.find((c) => c.hex === selectedColor)?.color || "";
+    const colorName =
+      uniqueColors.find((c) => c.hex === selectedColor)?.color || "";
     addItem({
       productId: product.id,
       name: product.name,
@@ -108,12 +137,23 @@ export default function ProductDetails({ product }: { product: Product }) {
     setTimeout(() => setAdded(false), 2000);
   };
 
+  const price = parseFloat(product.price);
+  const comparePrice = product.comparePrice
+    ? parseFloat(product.comparePrice)
+    : null;
+  const hasDiscount = comparePrice !== null && comparePrice > price;
+  const discountPercent = hasDiscount
+    ? Math.round(((comparePrice! - price) / comparePrice!) * 100)
+    : 0;
+
+  // Ar aprašymas yra ir ar jis ne tuščias
+  const hasDescription = product.description && product.description.trim().length > 0;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-      {/* Nuotraukos — kairė pusė */}
+      {/* KAIRĖ — Paveikslėlis */}
       <div>
-        {/* Pagrindinė nuotrauka */}
-        <div className="aspect-square bg-white flex items-center justify-center overflow-hidden border border-gray-100">
+        <div className="relative aspect-square bg-white border border-line rounded-md overflow-hidden">
           {currentImage ? (
             <img
               src={currentImage.url}
@@ -122,43 +162,93 @@ export default function ProductDetails({ product }: { product: Product }) {
               key={currentImage.url}
             />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={0.5} stroke="currentColor" className="w-32 h-32 text-gray-200">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
-            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span
+                className="text-6xl font-display font-bold select-none"
+                style={{ color: "rgba(14, 14, 14, 0.1)" }}
+              >
+                {product.name.charAt(0)}
+              </span>
+            </div>
+          )}
+
+          {hasDiscount && (
+            <div className="absolute top-4 left-4 bg-accent text-white px-3 py-1.5 rounded-sm">
+              <span className="text-xs font-display font-semibold uppercase tracking-widest">
+                -{discountPercent}%
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Mažos nuotraukų miniatiūros (jei yra kelios) */}
         {product.images && product.images.length > 1 && (
           <div className="grid grid-cols-4 gap-2 mt-3">
             {product.images.slice(0, 4).map((img, i) => (
-              <div key={img.id || i} className="aspect-square bg-white border border-gray-100 flex items-center justify-center overflow-hidden cursor-pointer hover:border-black transition-colors">
-                <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain p-2" />
+              <div
+                key={img.id || i}
+                className="aspect-square bg-white border border-line rounded-md overflow-hidden cursor-pointer hover:border-accent transition-colors"
+              >
+                <img
+                  src={img.url}
+                  alt={img.alt || product.name}
+                  className="w-full h-full object-contain p-2"
+                />
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Informacija — dešinė pusė */}
+      {/* DEŠINĖ — Info */}
       <div>
-        {/* Pavadinimas — Roly stilius */}
-        <h1 className="font-[family-name:var(--font-montserrat)]">
-          <span className="text-4xl font-black uppercase tracking-tight text-gray-900">
-            {product.name}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-8 h-px bg-accent" aria-hidden="true" />
+          <span className="text-xs font-display font-medium uppercase tracking-widest text-accent">
+            {product.category?.name || "Produktas"}
           </span>
-          {product.sku && (
-            <span className="text-2xl font-normal text-gray-400 ml-3">{product.sku}</span>
-          )}
-        </h1>
+        </div>
 
-        {/* Aprašymas */}
-        {product.description && (
-          <p className="text-sm text-gray-500 mt-4 leading-relaxed">{product.description}</p>
+        <div className="flex items-baseline gap-3 flex-wrap mb-2">
+          <h1
+            className="text-3xl lg:text-4xl font-display font-semibold tracking-tight"
+            style={{ color: "var(--color-ink)" }}
+          >
+            {product.name}
+          </h1>
+          {product.sku && (
+            <span className="text-sm font-display uppercase tracking-widest text-muted">
+              {product.sku}
+            </span>
+          )}
+        </div>
+
+        {/* Trumpas aprašymas po pavadinimu — tik jei yra */}
+        {hasDescription && (
+          <p className="text-sm text-muted leading-relaxed mb-6">
+            {product.description}
+          </p>
         )}
 
-        {/* Spalvos — Roly stilius su kodais */}
-        <div className="mt-8 pb-6 border-b border-gray-100">
+        {/* Kaina */}
+        <div className="flex items-baseline gap-3 mb-6 pb-6 border-b border-line">
+          <span className="text-3xl font-display font-semibold text-accent">
+            {price.toFixed(2)} €
+          </span>
+          {hasDiscount && (
+            <span className="text-lg text-muted line-through">
+              {comparePrice!.toFixed(2)} €
+            </span>
+          )}
+          <span className="text-xs font-display uppercase tracking-widest text-muted ml-auto">
+            Nuo 10 vnt.
+          </span>
+        </div>
+
+        {/* Spalvos */}
+        <div className="mb-6 pb-6 border-b border-line">
+          <h3 className="text-xs font-display font-semibold uppercase tracking-widest text-ink mb-3">
+            Spalva: <span className="text-accent font-normal">{selectedColorName}</span>
+          </h3>
           <div className="flex flex-wrap gap-3">
             {uniqueColors.map((c) => {
               const code = COLOR_CODES[c.hex.toUpperCase()] || "";
@@ -171,15 +261,22 @@ export default function ProductDetails({ product }: { product: Product }) {
                   className="flex flex-col items-center gap-1"
                 >
                   <span
-                    className={`w-9 h-9 rounded-full transition-all ${
+                    className={`w-10 h-10 rounded-full transition-all ${
                       isSelected
-                        ? "ring-2 ring-black ring-offset-2 scale-110"
-                        : "border border-gray-300 hover:scale-105"
+                        ? "ring-2 ring-accent ring-offset-2 ring-offset-paper scale-110"
+                        : "border border-line-strong hover:scale-105"
                     }`}
                     style={{ backgroundColor: c.hex }}
                   />
                   {code && (
-                    <span className={`text-[10px] ${isSelected ? "text-black font-bold" : "text-gray-400"}`}>
+                    <span
+                      className="text-[10px] font-display leading-none"
+                      style={{
+                        color: isSelected
+                          ? "var(--color-accent)"
+                          : "var(--color-muted)",
+                      }}
+                    >
                       {code}
                     </span>
                   )}
@@ -189,145 +286,192 @@ export default function ProductDetails({ product }: { product: Product }) {
           </div>
         </div>
 
-        {/* Techninė informacija — Roly accordion */}
-        <div className="border-b border-gray-100">
-          <button
-            onClick={() => toggleSection('tech')}
-            className="w-full flex items-center justify-between py-4 text-left"
-          >
-            <span className="text-sm font-bold text-gray-900">Techninė informacija</span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-              className={`w-4 h-4 text-gray-400 transition-transform ${openSections.tech ? "rotate-180" : ""}`}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-          {openSections.tech && (
-            <div className="pb-4 text-sm text-gray-500 space-y-2">
-              <p>{product.description}</p>
-              {product.category && <p>Kategorija: {product.category.name}</p>}
-              {product.sku && <p>Modelis: {product.sku}</p>}
-              <p>Spalvų: {uniqueColors.length}</p>
-              <p>Dydžių: {sizesForColor.length}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Sudėtis ir pastabos */}
-        <div className="border-b border-gray-100">
-          <button
-            onClick={() => toggleSection('composition')}
-            className="w-full flex items-center justify-between py-4 text-left"
-          >
-            <span className="text-sm font-bold text-gray-900">Sudėtis ir pastabos</span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-              className={`w-4 h-4 text-gray-400 transition-transform ${openSections.composition ? "rotate-180" : ""}`}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-          {openSections.composition && (
-            <div className="pb-4 text-sm text-gray-500 space-y-2">
-              <p>100% medvilnė (šukuota medvilnė)</p>
-              <p>Siūlės šoninės, užlyginta apykaklės juosta</p>
-            </div>
-          )}
-        </div>
-
-        {/* Pakuotė */}
-        <div className="border-b border-gray-100">
-          <button
-            onClick={() => toggleSection('packaging')}
-            className="w-full flex items-center justify-between py-4 text-left"
-          >
-            <span className="text-sm font-bold text-gray-900">Pakuotė</span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-              className={`w-4 h-4 text-gray-400 transition-transform ${openSections.packaging ? "rotate-180" : ""}`}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-          {openSections.packaging && (
-            <div className="pb-4 text-sm text-gray-500 space-y-2">
-              <p>Individualiai supakuota skaidriame polietileno maiše.</p>
-              <p>Kiekis dėžėje: 50 vnt.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Kaina */}
-        <div className="flex items-center gap-3 mt-6 pb-6 border-b border-gray-100">
-          <span className="text-3xl font-black text-gray-900">
-            {parseFloat(product.price).toFixed(2)} €
-          </span>
-          {product.comparePrice && (
-            <>
-              <span className="text-lg text-gray-400 line-through">
-                {parseFloat(product.comparePrice).toFixed(2)} €
-              </span>
-              <span className="bg-black text-white text-xs font-bold px-2 py-1">
-                -{Math.round((1 - parseFloat(product.price) / parseFloat(product.comparePrice)) * 100)}%
-              </span>
-            </>
-          )}
-        </div>
-
         {/* Dydžiai */}
-        <div className="mt-6">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Dydis</h3>
+        <div className="mb-6">
+          <h3 className="text-xs font-display font-semibold uppercase tracking-widest text-ink mb-3">
+            Dydis: <span className="text-accent font-normal">{selectedSize}</span>
+          </h3>
           <div className="flex flex-wrap gap-2">
-            {sizesForColor.map((s) => (
-              <button
-                key={s.size}
-                onClick={() => { setSelectedSize(s.size); setQuantity(1); }}
-                disabled={s.stock === 0}
-                className={`min-w-12 px-4 py-2.5 text-sm font-medium transition-all ${
-                  selectedSize === s.size
-                    ? "bg-black text-white"
-                    : s.stock === 0
-                    ? "bg-gray-50 text-gray-300 cursor-not-allowed"
-                    : "bg-white border border-gray-200 text-gray-700 hover:border-black"
-                }`}
-              >
-                {s.size}
-              </button>
-            ))}
+            {sizesForColor.map((s) => {
+              const isSelected = selectedSize === s.size;
+              const isDisabled = s.stock === 0;
+              return (
+                <button
+                  key={s.size}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    setSelectedSize(s.size);
+                    setQuantity(10);
+                  }}
+                  disabled={isDisabled}
+                  className="min-w-14 px-4 py-2.5 text-sm font-display font-medium rounded-sm transition-all border"
+                  style={{
+                    backgroundColor: isSelected
+                      ? "var(--color-ink)"
+                      : isDisabled
+                      ? "transparent"
+                      : "white",
+                    color: isSelected
+                      ? "var(--color-paper)"
+                      : isDisabled
+                      ? "var(--color-line-strong)"
+                      : "var(--color-ink)",
+                    borderColor: isSelected
+                      ? "var(--color-ink)"
+                      : "var(--color-line-strong)",
+                    cursor: isDisabled ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {s.size}
+                </button>
+              );
+            })}
           </div>
+          {selectedVariant && (
+            <p className="text-xs text-muted mt-3 font-display">
+              Sandėlyje: {selectedVariant.stock} vnt.
+            </p>
+          )}
         </div>
-
-        {selectedVariant && (
-          <p className="text-xs text-gray-400 mt-3">
-            Sandėlyje: {selectedVariant.stock} vnt.
-          </p>
-        )}
 
         {/* Kiekis + Į krepšelį */}
-        <div className="flex items-center gap-3 mt-6">
-          <div className="flex items-center border border-gray-200">
+        <div className="flex items-stretch gap-3 mb-8">
+          <div className="flex items-center border border-line-strong rounded-sm bg-white">
             <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="px-4 py-3 text-gray-500 hover:text-black transition-colors"
-            >−</button>
-            <span className="px-4 py-3 font-medium text-gray-900 min-w-12 text-center border-x border-gray-200">
+              onClick={() => setQuantity(Math.max(10, quantity - 1))}
+              className="px-4 py-3 text-ink hover:text-accent transition-colors font-display font-semibold"
+              aria-label="Sumažinti kiekį"
+            >
+              −
+            </button>
+            <span className="px-4 py-3 font-display font-semibold min-w-12 text-center border-x border-line-strong text-ink">
               {quantity}
             </span>
             <button
-              onClick={() => setQuantity(Math.min(selectedVariant?.stock || 1, quantity + 1))}
-              className="px-4 py-3 text-gray-500 hover:text-black transition-colors"
-            >+</button>
+              onClick={() =>
+                setQuantity(Math.min(selectedVariant?.stock || 10, quantity + 1))
+              }
+              className="px-4 py-3 text-ink hover:text-accent transition-colors font-display font-semibold"
+              aria-label="Padidinti kiekį"
+            >
+              +
+            </button>
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={!selectedVariant || selectedVariant.stock === 0}
-            className={`flex-1 font-bold py-3.5 px-8 uppercase tracking-wider text-sm transition-all ${
-              added
-                ? "bg-green-600 text-white"
-                : "bg-black hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 text-white"
-            }`}
+            className="flex-1 font-display font-medium tracking-tight rounded-md transition-all text-base px-6 shadow-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: added
+                ? "var(--color-success)"
+                : "var(--color-accent)",
+              color: "white",
+            }}
           >
-            {added ? "✓ PRIDĖTA" : `Į KREPŠELĮ — ${(parseFloat(product.price) * quantity).toFixed(2)} €`}
+            {added
+              ? "✓ Pridėta į krepšelį"
+              : `Į krepšelį — ${(price * quantity).toFixed(2)} €`}
           </button>
+        </div>
+
+        {/* Accordion — tik techniniai duomenys iš DB */}
+        <div className="border-t border-line">
+          <div className="border-b border-line">
+            <button
+              onClick={() => toggleSection("tech")}
+              className="w-full flex items-center justify-between py-4 text-left"
+            >
+              <span className="text-sm font-display font-semibold uppercase tracking-widest text-ink">
+                Techninė informacija
+              </span>
+              <span className="text-muted text-lg leading-none">
+                {openSections.tech ? "−" : "+"}
+              </span>
+            </button>
+            {openSections.tech && (
+              <div className="pb-5 text-sm text-muted space-y-1.5 leading-relaxed">
+                {product.category && (
+                  <p>
+                    <strong className="text-ink font-display">Kategorija:</strong>{" "}
+                    {product.category.name}
+                  </p>
+                )}
+                {product.sku && (
+                  <p>
+                    <strong className="text-ink font-display">Modelis:</strong>{" "}
+                    {product.sku}
+                  </p>
+                )}
+                <p>
+                  <strong className="text-ink font-display">Spalvų:</strong>{" "}
+                  {uniqueColors.length}
+                </p>
+                <p>
+                  <strong className="text-ink font-display">Dydžių:</strong>{" "}
+                  {sizesForColor.length}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Pilnas aprašymas — tik jei yra duomenų */}
+          {hasDescription && (
+            <div className="border-b border-line">
+              <button
+                onClick={() => toggleSection("description")}
+                className="w-full flex items-center justify-between py-4 text-left"
+              >
+                <span className="text-sm font-display font-semibold uppercase tracking-widest text-ink">
+                  Pilnas aprašymas
+                </span>
+                <span className="text-muted text-lg leading-none">
+                  {openSections.description ? "−" : "+"}
+                </span>
+              </button>
+              {openSections.description && (
+                <div className="pb-5 text-sm text-muted leading-relaxed">
+                  <p>{product.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Info apie prekę */}
+        <div className="mt-6 bg-paper-soft border border-line rounded-md p-4">
+          <div className="flex items-start gap-3">
+            <svg
+              className="w-5 h-5 text-accent flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div className="text-xs text-muted font-display leading-relaxed">
+              <p className="font-semibold text-ink mb-1">Informacija verslui</p>
+              <p>
+                Užsakymas nuo <strong>10 vnt.</strong>, pristatymas per 3–5
+                dienas. Dėl logotipo spausdinimo susisiekite{" "}
+                <a
+                  href="mailto:info@eprintukas.lt"
+                  className="text-accent hover:underline"
+                >
+                  info@eprintukas.lt
+                </a>
+                .
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
