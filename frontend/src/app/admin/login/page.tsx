@@ -1,7 +1,23 @@
 "use client";
 
+/**
+ * Admin prisijungimo puslapis — /admin/login
+ *
+ * Sprint 5.1 atkūrimas (senas failas buvo nupjautas ant emoji 🔐).
+ *
+ * Kaip veikia:
+ *   1. Vartotojas įveda email + slaptažodį
+ *   2. POST /api/backend/auth/login (per proxy)
+ *   3. Backend'as patikrina bcrypt + grąžina JWT token + admin info
+ *   4. Token išsaugomas localStorage'e per Zustand persist
+ *   5. Redirect į /admin/dashboard
+ *
+ * Stilius — TRUEWERK light (cream fonas, Space Grotesk, oranžinis akcentas)
+ */
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/lib/authStore";
 
 export default function AdminLoginPage() {
@@ -18,14 +34,18 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://e-printukas-production.up.railway.app/api/auth/login", {
+      const res = await fetch("/api/backend/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
 
-      if (!res.ok) { setError(data.error || "Prisijungimo klaida"); setLoading(false); return; }
+      if (!res.ok) {
+        setError(data.error || "Prisijungimo klaida");
+        setLoading(false);
+        return;
+      }
 
       login(data.token, data.admin);
       router.push("/admin/dashboard");
@@ -36,39 +56,109 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="w-full max-w-md">
+        {/* Logo + antraštė */}
         <div className="text-center mb-8">
-          <span className="text-4xl">🖨️</span>
-          <h1 className="text-2xl font-bold text-gray-900 mt-4">e.<span className="text-gray-900">printukas</span>.lt</h1>
-          <p className="text-gray-500 mt-2">Admin prisijungimas</p>
+          <Link href="/" className="inline-block mb-6">
+            <span className="text-2xl font-display font-semibold tracking-tight">
+              <span style={{ color: "var(--color-ink)" }}>e.</span>
+              <span style={{ color: "var(--color-accent)" }}>printukas</span>
+            </span>
+          </Link>
+
+          <div className="flex items-center gap-2 justify-center mb-3">
+            <span className="w-8 h-px bg-accent" aria-hidden="true" />
+            <span className="text-xs font-display font-medium uppercase tracking-widest text-accent">
+              Administratoriaus sritis
+            </span>
+            <span className="w-8 h-px bg-accent" aria-hidden="true" />
+          </div>
+
+          <h1
+            className="text-3xl font-display font-semibold tracking-tight"
+            style={{ color: "var(--color-ink)" }}
+          >
+            Prisijunkite
+          </h1>
         </div>
 
-        <div className="bg-white  shadow-sm border border-gray-200 p-8">
+        {/* Forma */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white border border-line rounded-md p-8 space-y-5"
+        >
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-xs font-display font-semibold uppercase tracking-widest text-ink mb-2"
+            >
+              El. paštas
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className="w-full px-4 py-3 border border-line-strong rounded-sm bg-white focus:outline-none focus:border-accent transition-colors text-sm font-display"
+              style={{ color: "var(--color-ink)" }}
+              placeholder="admin@eprintukas.lt"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-display font-semibold uppercase tracking-widest text-ink mb-2"
+            >
+              Slaptažodis
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              className="w-full px-4 py-3 border border-line-strong rounded-sm bg-white focus:outline-none focus:border-accent transition-colors text-sm font-display"
+              style={{ color: "var(--color-ink)" }}
+            />
+          </div>
+
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3  mb-6">{error}</div>
+            <div
+              className="text-sm font-display p-3 rounded-sm border"
+              style={{
+                color: "var(--color-error)",
+                borderColor: "var(--color-error)",
+                backgroundColor: "rgba(163, 45, 45, 0.05)",
+              }}
+            >
+              {error}
+            </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">El. paštas</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@eprintukas.lt" required
-                className="w-full px-4 py-2.5 border border-gray-300  focus:ring-2 focus:ring-gray-900 focus:border-black outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Slaptažodis</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required
-                className="w-full px-4 py-2.5 border border-gray-300  focus:ring-2 focus:ring-gray-900 focus:border-black outline-none" />
-            </div>
-            <button type="submit" disabled={loading}
-              className="w-full bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white font-semibold py-3  transition-colors">
-              {loading ? "Jungiamasi..." : "Prisijungti"}
-            </button>
-          </form>
-        </div>
+
+          <button
+            type="submit"
+            disabled={loading || !email || !password}
+            className="w-full font-display font-medium tracking-tight rounded-md transition-all text-base px-6 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: "var(--color-accent)",
+              color: "white",
+            }}
+          >
+            {loading ? "Prisijungiama..." : "Prisijungti"}
+          </button>
+        </form>
+
+        <p className="text-center mt-6 text-xs font-display uppercase tracking-widest text-muted">
+          <Link href="/" className="hover:text-accent transition-colors">
+            ← Grįžti į svetainę
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
-
-
-
