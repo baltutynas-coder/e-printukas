@@ -1,34 +1,37 @@
 /**
  * Pagrindinis puslapio layout'as (Root Layout).
- * 
+ *
  * Next.js App Router architektūroje šis failas apgaubia VISUS puslapius —
  * čia apibrėžiame:
  *   1. <html> ir <body> tag'us
  *   2. Google Fonts užkrovimą per next/font (be layout shift)
  *   3. Metadata (SEO) — title, description, OG tag'us
- *   4. Header ir Footer, kurie matomi visur
- * 
+ *   4. ConditionalChrome — sąlygiškai rodo Header/Footer (ne admin puslapiuose)
+ *
+ * Sprint 5.2 pokytis:
+ *   - Anksčiau Header/Footer buvo tiesiogiai čia — rodomi VISUOSE puslapiuose
+ *     (įskaitant /admin/*)
+ *   - Dabar įdėtas ConditionalChrome (Client Component), kuris sąlygiškai
+ *     rodo juos tik public puslapiuose
+ *
  * TRUEWERK DNR:
- *   - Space Grotesk antraštėms (display šriftas, techniškas)
- *   - Inter body tekstui (aiškus, gerai skaitomas)
- *   - bg-paper + text-ink bazė (ne balta + juoda)
+ *   - Space Grotesk antraštėms
+ *   - Inter body tekstui
+ *   - bg-paper + text-ink bazė
  */
 
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ConditionalChrome from "@/components/ConditionalChrome";
 
-// Display šriftas — antraštėms, hero, didelis tipografinis pareiškimas
 const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin", "latin-ext"], // latin-ext BŪTINAS lietuviškiems simboliams (ą, č, ė...)
+  subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-space-grotesk",
   display: "swap",
 });
 
-// Body šriftas — paragrafai, aprašymai, sąsajos tekstas
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600", "700"],
@@ -36,7 +39,6 @@ const inter = Inter({
   display: "swap",
 });
 
-// SEO metadata — rodoma Google paieškos rezultatuose, socialinių tinklų preview'se
 export const metadata: Metadata = {
   metadataBase: new URL("https://e-printukas.vercel.app"),
   title: {
@@ -82,9 +84,7 @@ export default function RootLayout({
   return (
     <html lang="lt" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body className="bg-paper text-ink antialiased min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <ConditionalChrome>{children}</ConditionalChrome>
       </body>
     </html>
   );
