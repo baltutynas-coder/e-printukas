@@ -1,5 +1,26 @@
 "use client";
 
+/**
+ * Kategorijos puslapis — /kategorija/[slug]
+ *
+ * Sprint 3.2 pokyčiai (galutiniai):
+ *
+ * CORS FIX:
+ *   - Dabar naudojam /api/backend/... proxy route'ą vietoj tiesioginių
+ *     Railway URL'ų. Next.js serveryje handler'is perduoda request'us į
+ *     Railway, browser'ui atrodo, kad fetch'ai iš to paties origin'o
+ *
+ * SUBCATEGORY FIX:
+ *   - Naudojam SUBCATEGORY_MAP (kaip homepage'e) — tėvinei kategorijai
+ *     fetch'inam visas subkategorijas atskirai, apjungiam
+ *
+ * TRUEWERK DIZAINAS:
+ *   - Cream fonas, Space Grotesk, oranžinis akcentas
+ *   - Real kategorijos pavadinimas (ne slug'as)
+ *   - Realūs produktų skaičiai
+ *   - Sticky filtrų šoninė juosta
+ */
+
 import ProductGrid from "@/components/ProductGrid";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
@@ -9,10 +30,27 @@ interface Category {
   name: string;
   slug: string;
   parentId: string | null;
-  children?: Category[];
 }
 
-// Spalvų hex → Roly kodų žemėlapis
+const SUBCATEGORY_MAP: Record<string, string[]> = {
+  "marskineliai-ir-polo": ["marskineliai", "polo-marskineliai"],
+  dzemperiai: ["su-gobtuvu", "megztiniai"],
+  "sportine-kolekcija": [
+    "sportiniai-marskineliai",
+    "sportines-kelnes",
+    "sportiniai-komplektai",
+  ],
+  kelnes: ["kelnes"],
+  "darbo-drabuziai": [
+    "horeca",
+    "signaliniai-drabuziai",
+    "medicina-ir-grozis",
+    "pramone",
+  ],
+  eco: ["eco"],
+  "kiti-produktai": ["avalyne"],
+};
+
 const COLOR_CODES: Record<string, string> = {
   "#FFFFFF": "01", "#000000": "02", "#001D43": "55", "#DC002E": "60",
   "#0060A9": "05", "#C4DDF1": "86", "#00A0D1": "12", "#008F4F": "83",
@@ -23,7 +61,6 @@ const COLOR_CODES: Record<string, string> = {
   "#3D3D3D": "38",
 };
 
-// Gender → lietuviškas pavadinimas
 const GENDER_MAP: Record<string, string> = {
   MEN: "Vyrams",
   WOMEN: "Moterims",
@@ -38,23 +75,17 @@ export default function CategoryPage({
 }) {
   const [slug, setSlug] = useState("");
   const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [allProductsGlobal, setAllProductsGlobal] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(true);
 
-  // Filtrai
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("default");
 
-  // Sekcijų išskleidimas
-  const [expandedCats, setExpandedCats] = useState<string[]>([]);
   const [sectionsOpen, setSectionsOpen] = useState({
-    categories: true,
-    sizes: false,
-    colors: false,
+    sizes: true,
+    colors: true,
     types: false,
   });
 
@@ -62,106 +93,75 @@ export default function CategoryPage({
     params.then((p) => setSlug(p.slug));
   }, [params]);
 
-  // Gauti kategorijas
+  // Per /api/backend/ proxy — ne tiesiai į Railway
   useEffect(() => {
-    fetch("https://e-printukas-production.up.railway.app/api/categories")
+    fetch("/api/backend/categories")
       .then((r) => r.json())
       .then((d) => setCategories(d.categories || []))
       .catch(() => {});
   }, []);
 
-  // Gauti VISUS produktus (skaičiams)
-  useEffect(() => {
-    fetch("https://e-printukas-production.up.railway.app/api/products?limit=100")
-      .then((r) => r.json())
-      .then((d) => {
-        const withImages = (d.products || []).filter(
-          (p: any) => p.images && p.images.length > 0
-        );
-        setAllProductsGlobal(withImages);
-      })
-      .catch(() => {});
-  }, []);
-
-  // Gauti produktus pagal kategoriją
   useEffect(() => {
     if (!slug) return;
+
     setLoading(true);
     setSelectedSizes([]);
     setSelectedColors([]);
     setSelectedGenders([]);
-    fetch(`https://e-printukas-production.up.railway.app/api/products?category=${slug}&limit=50`)
-      .then((r) => r.json())
-      .then((d) => {
-        const withImages = (d.products || []).filter(
-          (p: any) => p.images && p.images.length > 0
-        );
-        setAllProducts(withImages);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+
+    const subcategorySlugs = SUBCATEGORY_MAP[slug];
+    const slugsToFetch =
+      subcategorySlugs && subcategorySlugs.length > 0
+        ? subcategorySlugs
+        : [slug];
+
+    Promise.all(
+      slugsToFetch.map((s) =>
+        fetch(`/api/backend/products?category=${s}&limit=100`)
+          .then((r) => r.json())
+          .then((d) => d.products || [])
+          .catch(() => [])
+      )
+    ).then((results) => {
+      const merged = results.flat();
+      const unique = Array.from(
+        new Map(merged.map((p: any) => [p.id, p])).values()
+      );
+      const withImages = unique.filter(
+        (p: any) => p.images && p.images.length > 0
+      );
+      setAllProducts(withImages);
+      setLoading(false);
+    });
   }, [slug]);
 
-  // Dabartinė kategorija
   const currentCategory = useMemo(() => {
     if (!slug || categories.length === 0) return null;
-    for (const cat of categories) {
-      if (cat.slug === slug) return cat;
-      if (cat.children) {
-        const child = cat.children.find((c) => c.slug === slug);
-        if (child) return child;
-      }
-    }
-    return null;
-  }, [slug, categories]);
-
-  // Išskleisti tėvinę
-  useEffect(() => {
-    if (!slug || categories.length === 0) return;
-    for (const cat of categories) {
-      if (cat.slug === slug) { setExpandedCats([cat.id]); return; }
-      if (cat.children) {
-        const child = cat.children.find((c) => c.slug === slug);
-        if (child) { setExpandedCats([cat.id]); return; }
-      }
-    }
+    return categories.find((c) => c.slug === slug) || null;
   }, [slug, categories]);
 
   const categoryName = currentCategory?.name || slug;
-  const parentCategories = categories.filter((c) => !c.parentId);
+  const parentCategories = useMemo(
+    () => categories.filter((c) => !c.parentId),
+    [categories]
+  );
 
-  // Suskaičiuoti produktus pagal kategoriją (iš VISŲ produktų)
-  const productCountByCategory = useMemo(() => {
-    const counts: Record<string, number> = {};
-    allProductsGlobal.forEach((p) => {
-      if (p.category?.slug) {
-        counts[p.category.slug] = (counts[p.category.slug] || 0) + 1;
-      }
-    });
-    // Pagrindinės kategorijos: sumuoti su vaikų
-    parentCategories.forEach((parent) => {
-      let total = counts[parent.slug] || 0;
-      parent.children?.forEach((child) => {
-        total += counts[child.slug] || 0;
-      });
-      counts[`parent_${parent.slug}`] = total;
-    });
-    return counts;
-  }, [allProductsGlobal, parentCategories]);
-
-  // Unikalūs dydžiai
   const availableSizes = useMemo(() => {
     const sizes = new Set<string>();
     allProducts.forEach((p) =>
       p.variants?.forEach((v: any) => sizes.add(v.size))
     );
-    const order = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "3/4", "5/6", "7/8", "9/10", "11/12"];
+    const order = [
+      "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL",
+      "3/4", "5/6", "7/8", "9/10", "11/12",
+    ];
     return [...sizes].sort(
-      (a, b) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b))
+      (a, b) =>
+        (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) -
+        (order.indexOf(b) === -1 ? 99 : order.indexOf(b))
     );
   }, [allProducts]);
 
-  // Unikalios spalvos
   const availableColors = useMemo(() => {
     const colorMap = new Map<string, { name: string; hex: string }>();
     allProducts.forEach((p) =>
@@ -174,7 +174,6 @@ export default function CategoryPage({
     return [...colorMap.values()];
   }, [allProducts]);
 
-  // Unikalūs gender tipai šioje kategorijoje
   const availableGenders = useMemo(() => {
     const genders = new Set<string>();
     allProducts.forEach((p) => {
@@ -183,13 +182,14 @@ export default function CategoryPage({
     return [...genders];
   }, [allProducts]);
 
-  // Suskaičiuoti kiek produktų kiekvienam filtrui
   const sizeProductCount = useMemo(() => {
     const counts: Record<string, number> = {};
     allProducts.forEach((p) => {
       const sizes = new Set<string>();
       p.variants?.forEach((v: any) => sizes.add(v.size));
-      sizes.forEach((s) => { counts[s] = (counts[s] || 0) + 1; });
+      sizes.forEach((s) => {
+        counts[s] = (counts[s] || 0) + 1;
+      });
     });
     return counts;
   }, [allProducts]);
@@ -199,7 +199,9 @@ export default function CategoryPage({
     allProducts.forEach((p) => {
       const colors = new Set<string>();
       p.variants?.forEach((v: any) => colors.add(v.colorHex));
-      colors.forEach((c) => { counts[c] = (counts[c] || 0) + 1; });
+      colors.forEach((c) => {
+        counts[c] = (counts[c] || 0) + 1;
+      });
     });
     return counts;
   }, [allProducts]);
@@ -212,7 +214,6 @@ export default function CategoryPage({
     return counts;
   }, [allProducts]);
 
-  // Filtruoti produktus
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
 
@@ -233,281 +234,366 @@ export default function CategoryPage({
     }
 
     if (sortBy === "name") result.sort((a, b) => a.name.localeCompare(b.name));
-    if (sortBy === "price_asc") result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-    if (sortBy === "price_desc") result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    if (sortBy === "price_asc")
+      result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    if (sortBy === "price_desc")
+      result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
 
     return result;
   }, [allProducts, selectedSizes, selectedColors, selectedGenders, sortBy]);
 
-  const toggleSize = (s: string) => setSelectedSizes((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s]);
-  const toggleColor = (h: string) => setSelectedColors((p) => p.includes(h) ? p.filter((x) => x !== h) : [...p, h]);
-  const toggleGender = (g: string) => setSelectedGenders((p) => p.includes(g) ? p.filter((x) => x !== g) : [...p, g]);
-  const clearAllFilters = () => { setSelectedSizes([]); setSelectedColors([]); setSelectedGenders([]); };
-  const toggleSection = (s: keyof typeof sectionsOpen) => setSectionsOpen((p) => ({ ...p, [s]: !p[s] }));
-  const toggleExpand = (id: string) => setExpandedCats((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
+  const toggleSize = (s: string) =>
+    setSelectedSizes((p) =>
+      p.includes(s) ? p.filter((x) => x !== s) : [...p, s]
+    );
+  const toggleColor = (h: string) =>
+    setSelectedColors((p) =>
+      p.includes(h) ? p.filter((x) => x !== h) : [...p, h]
+    );
+  const toggleGender = (g: string) =>
+    setSelectedGenders((p) =>
+      p.includes(g) ? p.filter((x) => x !== g) : [...p, g]
+    );
+  const clearAllFilters = () => {
+    setSelectedSizes([]);
+    setSelectedColors([]);
+    setSelectedGenders([]);
+  };
+  const toggleSection = (s: keyof typeof sectionsOpen) =>
+    setSectionsOpen((p) => ({ ...p, [s]: !p[s] }));
 
-  const hasActiveFilters = selectedSizes.length > 0 || selectedColors.length > 0 || selectedGenders.length > 0;
+  const hasActiveFilters =
+    selectedSizes.length > 0 ||
+    selectedColors.length > 0 ||
+    selectedGenders.length > 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-xs text-gray-400 mb-6">
-        <Link href="/" className="hover:text-black transition-colors">🏠</Link>
-        <span>›</span>
-        <span className="text-black font-medium">{categoryName}</span>
-      </nav>
-
-      {/* Pavadinimas + FILTER + Sort */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-black uppercase tracking-tight font-[family-name:var(--font-montserrat)]">
-          {categoryName}
-        </h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 border border-gray-300 px-5 py-2.5 text-sm font-medium hover:border-black transition-colors"
+    <div className="bg-paper min-h-screen">
+      <div className="container-content py-8 lg:py-12">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-xs mb-6">
+          <Link
+            href="/"
+            className="font-display uppercase tracking-widest text-muted hover:text-accent transition-colors"
           >
-            FILTRAS
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-              {showFilters ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              )}
-            </svg>
-          </button>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-            className="border border-gray-300 px-4 py-2.5 text-sm bg-white hover:border-black transition-colors cursor-pointer">
-            <option value="default">Numatytasis</option>
-            <option value="name">Pavadinimas A–Ž</option>
-            <option value="price_asc">Kaina: žemiausia</option>
-            <option value="price_desc">Kaina: aukščiausia</option>
-          </select>
-          <span className="text-sm text-gray-400">{filteredProducts.length} produktų</span>
-        </div>
-      </div>
+            Pradžia
+          </Link>
+          <span className="text-line-strong">/</span>
+          <span className="font-display uppercase tracking-widest text-ink">
+            {categoryName}
+          </span>
+        </nav>
 
-      <div className="flex gap-8">
-        {/* ŠONINĖ JUOSTA */}
-        {showFilters && (
-          <aside className="w-64 flex-shrink-0">
-            {/* FILTER + Clear */}
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-              <button onClick={() => setShowFilters(false)}
-                className="flex items-center gap-2 border border-gray-300 px-4 py-2 text-sm font-medium hover:border-black transition-colors">
-                FILTRAS
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-                </svg>
-              </button>
-              <button onClick={clearAllFilters} className="text-xs text-gray-500 hover:text-black transition-colors">
-                Valyti filtrus
-              </button>
+        {/* Antraštė ir rūšiavimas */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8 lg:mb-10">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-8 h-px bg-accent" aria-hidden="true" />
+              <span className="text-xs font-display font-medium uppercase tracking-widest text-accent">
+                Kategorija
+              </span>
             </div>
+            <h1
+              className="text-4xl lg:text-5xl font-display font-semibold tracking-tight"
+              style={{ color: "var(--color-ink)" }}
+            >
+              {categoryName}
+            </h1>
+            <p className="mt-2 text-sm text-muted font-display uppercase tracking-wider">
+              {filteredProducts.length}{" "}
+              {filteredProducts.length === 1 ? "produktas" : "produktai"}
+              {hasActiveFilters && ` iš ${allProducts.length}`}
+            </p>
+          </div>
 
-            {/* Pritaikyti filtrai */}
-            <div className="mb-5 pb-4 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-gray-900 mb-3">Pritaikyti filtrai</h3>
-              <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2.5 py-1.5">
-                  {categoryName}
-                  <Link href="/" className="text-gray-400 hover:text-black ml-0.5">×</Link>
-                </span>
-                {selectedSizes.map((s) => (
-                  <span key={s} className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2.5 py-1.5">
-                    {s}<button onClick={() => toggleSize(s)} className="text-gray-400 hover:text-black ml-0.5">×</button>
-                  </span>
-                ))}
-                {selectedColors.map((hex) => {
-                  const color = availableColors.find((c) => c.hex === hex);
-                  return (
-                    <span key={hex} className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2.5 py-1.5">
-                      <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: hex }} />
-                      {color?.name}<button onClick={() => toggleColor(hex)} className="text-gray-400 hover:text-black ml-0.5">×</button>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="sort"
+              className="text-xs font-display font-medium uppercase tracking-widest text-muted"
+            >
+              Rūšiuoti:
+            </label>
+            <select
+              id="sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="text-sm font-display border border-line-strong rounded-sm px-3 py-2 bg-white focus:outline-none focus:border-accent transition-colors"
+              style={{ color: "var(--color-ink)" }}
+            >
+              <option value="default">Rekomenduojama</option>
+              <option value="name">Pavadinimas (A-Z)</option>
+              <option value="price_asc">Kaina (mažiausia)</option>
+              <option value="price_desc">Kaina (didžiausia)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+          {/* Filtrai */}
+          <aside className="w-full lg:w-64 flex-shrink-0">
+            <div className="lg:sticky lg:top-24">
+              {hasActiveFilters && (
+                <div className="mb-6 pb-4 border-b border-line">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-display font-medium uppercase tracking-widest text-ink">
+                      Aktyvūs filtrai
                     </span>
-                  );
-                })}
-                {selectedGenders.map((g) => (
-                  <span key={g} className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2.5 py-1.5">
-                    {GENDER_MAP[g]}<button onClick={() => toggleGender(g)} className="text-gray-400 hover:text-black ml-0.5">×</button>
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-xs font-display uppercase tracking-wider text-accent hover:underline"
+                    >
+                      Išvalyti
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {selectedSizes.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => toggleSize(s)}
+                        className="inline-flex items-center gap-1 text-[10px] font-display uppercase tracking-wider px-2 py-1 bg-ink text-paper rounded-sm hover:bg-accent transition-colors"
+                      >
+                        {s} ×
+                      </button>
+                    ))}
+                    {selectedColors.map((h) => (
+                      <button
+                        key={h}
+                        onClick={() => toggleColor(h)}
+                        className="inline-flex items-center gap-1 text-[10px] font-display uppercase tracking-wider px-2 py-1 bg-ink text-paper rounded-sm hover:bg-accent transition-colors"
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: h }}
+                        />
+                        ×
+                      </button>
+                    ))}
+                    {selectedGenders.map((g) => (
+                      <button
+                        key={g}
+                        onClick={() => toggleGender(g)}
+                        className="inline-flex items-center gap-1 text-[10px] font-display uppercase tracking-wider px-2 py-1 bg-ink text-paper rounded-sm hover:bg-accent transition-colors"
+                      >
+                        {GENDER_MAP[g] || g} ×
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-6 pb-5 border-b border-line">
+                <button
+                  onClick={() => toggleSection("sizes")}
+                  className="w-full flex items-center justify-between mb-3"
+                >
+                  <span className="text-sm font-display font-semibold uppercase tracking-widest text-ink">
+                    Dydžiai
                   </span>
-                ))}
+                  <span className="text-muted text-lg leading-none">
+                    {sectionsOpen.sizes ? "−" : "+"}
+                  </span>
+                </button>
+                {sectionsOpen.sizes && (
+                  <div className="space-y-1">
+                    {availableSizes.map((size) => {
+                      const count = sizeProductCount[size] || 0;
+                      const isSelected = selectedSizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          onClick={() => toggleSize(size)}
+                          className="flex items-center gap-2 text-xs font-display w-full text-left py-1 hover:text-accent transition-colors"
+                          style={{
+                            color: isSelected
+                              ? "var(--color-accent)"
+                              : "var(--color-ink)",
+                          }}
+                        >
+                          <span
+                            className="w-4 h-4 border flex items-center justify-center text-[9px] flex-shrink-0 rounded-sm"
+                            style={{
+                              borderColor: isSelected
+                                ? "var(--color-accent)"
+                                : "var(--color-line-strong)",
+                              backgroundColor: isSelected
+                                ? "var(--color-accent)"
+                                : "transparent",
+                              color: "white",
+                            }}
+                          >
+                            {isSelected && "✓"}
+                          </span>
+                          <span className="flex-1 uppercase tracking-wider">
+                            {size}
+                          </span>
+                          <span className="text-[10px] text-muted">{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6 pb-5 border-b border-line">
+                <button
+                  onClick={() => toggleSection("colors")}
+                  className="w-full flex items-center justify-between mb-3"
+                >
+                  <span className="text-sm font-display font-semibold uppercase tracking-widest text-ink">
+                    Spalvos
+                  </span>
+                  <span className="text-muted text-lg leading-none">
+                    {sectionsOpen.colors ? "−" : "+"}
+                  </span>
+                </button>
+                {sectionsOpen.colors && (
+                  <div className="flex flex-wrap gap-3">
+                    {availableColors.map((c) => {
+                      const code = COLOR_CODES[c.hex.toUpperCase()] || "";
+                      const count = colorProductCount[c.hex] || 0;
+                      const isSelected = selectedColors.includes(c.hex);
+                      return (
+                        <button
+                          key={c.hex}
+                          onClick={() => toggleColor(c.hex)}
+                          title={`${c.name} (${count})`}
+                          className="flex flex-col items-center gap-1"
+                        >
+                          <span
+                            className={`w-8 h-8 rounded-full transition-all ${
+                              isSelected
+                                ? "ring-2 ring-accent ring-offset-2 ring-offset-paper scale-110"
+                                : "border border-line-strong hover:scale-105"
+                            }`}
+                            style={{ backgroundColor: c.hex }}
+                          />
+                          <span
+                            className="text-[9px] leading-none font-display"
+                            style={{
+                              color: isSelected
+                                ? "var(--color-accent)"
+                                : "var(--color-muted)",
+                            }}
+                          >
+                            {code || "·"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {availableGenders.length > 0 && (
+                <div className="mb-6 pb-5 border-b border-line">
+                  <button
+                    onClick={() => toggleSection("types")}
+                    className="w-full flex items-center justify-between mb-3"
+                  >
+                    <span className="text-sm font-display font-semibold uppercase tracking-widest text-ink">
+                      Tipas
+                    </span>
+                    <span className="text-muted text-lg leading-none">
+                      {sectionsOpen.types ? "−" : "+"}
+                    </span>
+                  </button>
+                  {sectionsOpen.types && (
+                    <div className="space-y-1">
+                      {availableGenders.map((g) => {
+                        const count = genderProductCount[g] || 0;
+                        const isSelected = selectedGenders.includes(g);
+                        return (
+                          <button
+                            key={g}
+                            onClick={() => toggleGender(g)}
+                            className="flex items-center gap-2 text-xs font-display w-full text-left py-1 hover:text-accent transition-colors"
+                            style={{
+                              color: isSelected
+                                ? "var(--color-accent)"
+                                : "var(--color-ink)",
+                            }}
+                          >
+                            <span
+                              className="w-4 h-4 border flex items-center justify-center text-[9px] flex-shrink-0 rounded-sm"
+                              style={{
+                                borderColor: isSelected
+                                  ? "var(--color-accent)"
+                                  : "var(--color-line-strong)",
+                                backgroundColor: isSelected
+                                  ? "var(--color-accent)"
+                                  : "transparent",
+                                color: "white",
+                              }}
+                            >
+                              {isSelected && "✓"}
+                            </span>
+                            <span className="flex-1 uppercase tracking-wider">
+                              {GENDER_MAP[g] || g}
+                            </span>
+                            <span className="text-[10px] text-muted">
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <span className="text-sm font-display font-semibold uppercase tracking-widest text-ink block mb-3">
+                  Kitos kategorijos
+                </span>
+                <div className="space-y-1">
+                  {parentCategories
+                    .filter((c) => c.slug !== slug)
+                    .slice(0, 6)
+                    .map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/kategorija/${cat.slug}`}
+                        className="block text-xs font-display uppercase tracking-wider text-muted hover:text-accent transition-colors py-1"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
+                </div>
               </div>
             </div>
-
-            {/* KATEGORIJOS — su skaičiais */}
-            <div className="mb-4 pb-4 border-b border-gray-100">
-              <button onClick={() => toggleSection("categories")} className="w-full flex items-center justify-between py-1 text-left">
-                <h3 className="text-sm font-bold text-gray-900">Kategorijos</h3>
-                <span className="text-gray-400 text-lg leading-none">{sectionsOpen.categories ? "−" : "+"}</span>
-              </button>
-              {sectionsOpen.categories && (
-                <div className="mt-3 space-y-0.5">
-                  {parentCategories.map((cat) => {
-                    const isExpanded = expandedCats.includes(cat.id);
-                    const isActive = cat.slug === slug;
-                    const hasChildren = cat.children && cat.children.length > 0;
-                    const childActive = cat.children?.some((c) => c.slug === slug);
-                    const count = productCountByCategory[`parent_${cat.slug}`] || 0;
-
-                    return (
-                      <div key={cat.id}>
-                        <div className="flex items-center justify-between">
-                          <Link href={`/kategorija/${cat.slug}`}
-                            className={`flex items-center gap-2 text-xs py-1.5 transition-colors uppercase tracking-wider flex-1 ${
-                              isActive || childActive ? "text-black font-bold" : "text-gray-600 hover:text-black"
-                            }`}>
-                            <span className={`w-3.5 h-3.5 border flex items-center justify-center text-[8px] flex-shrink-0 ${
-                              isActive || childActive ? "border-black bg-black text-white" : "border-gray-300"
-                            }`}>
-                              {(isActive || childActive) && "✓"}
-                            </span>
-                            <span className="flex-1">{cat.name.toUpperCase()}</span>
-                            <span className="text-[10px] text-gray-400 font-normal">{count}</span>
-                          </Link>
-                          {hasChildren && (
-                            <button onClick={() => toggleExpand(cat.id)} className="p-1 text-gray-400 hover:text-black ml-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
-                                className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                        {hasChildren && isExpanded && (
-                          <div className="ml-5 space-y-0.5">
-                            {cat.children!.map((child) => {
-                              const childCount = productCountByCategory[child.slug] || 0;
-                              return (
-                                <Link key={child.id} href={`/kategorija/${child.slug}`}
-                                  className={`flex items-center gap-2 text-xs py-1 transition-colors uppercase tracking-wider ${
-                                    child.slug === slug ? "text-black font-bold" : "text-gray-500 hover:text-black"
-                                  }`}>
-                                  <span className={`w-3.5 h-3.5 border flex items-center justify-center text-[8px] flex-shrink-0 ${
-                                    child.slug === slug ? "border-black bg-black text-white" : "border-gray-300"
-                                  }`}>
-                                    {child.slug === slug && "✓"}
-                                  </span>
-                                  <span className="flex-1">{child.name.toUpperCase()}</span>
-                                  <span className="text-[10px] text-gray-400 font-normal">{childCount}</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* DYDŽIAI — su skaičiais */}
-            <div className="mb-4 pb-4 border-b border-gray-100">
-              <button onClick={() => toggleSection("sizes")} className="w-full flex items-center justify-between py-1 text-left">
-                <h3 className="text-sm font-bold text-gray-900">Dydžiai</h3>
-                <span className="text-gray-400 text-lg leading-none">{sectionsOpen.sizes ? "−" : "+"}</span>
-              </button>
-              {sectionsOpen.sizes && (
-                <div className="mt-3 space-y-0.5">
-                  {availableSizes.map((size) => {
-                    const count = sizeProductCount[size] || 0;
-                    return (
-                      <button key={size} onClick={() => toggleSize(size)}
-                        className={`flex items-center gap-2 text-xs py-1 w-full text-left transition-colors ${
-                          selectedSizes.includes(size) ? "text-black font-bold" : "text-gray-600 hover:text-black"
-                        }`}>
-                        <span className={`w-3.5 h-3.5 border flex items-center justify-center text-[8px] flex-shrink-0 ${
-                          selectedSizes.includes(size) ? "border-black bg-black text-white" : "border-gray-300"
-                        }`}>
-                          {selectedSizes.includes(size) && "✓"}
-                        </span>
-                        <span className="flex-1">{size}</span>
-                        <span className="text-[10px] text-gray-400">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* SPALVOS — su kodais ir skaičiais */}
-            <div className="mb-4 pb-4 border-b border-gray-100">
-              <button onClick={() => toggleSection("colors")} className="w-full flex items-center justify-between py-1 text-left">
-                <h3 className="text-sm font-bold text-gray-900">Spalvos</h3>
-                <span className="text-gray-400 text-lg leading-none">{sectionsOpen.colors ? "−" : "+"}</span>
-              </button>
-              {sectionsOpen.colors && (
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {availableColors.map((c) => {
-                    const code = COLOR_CODES[c.hex.toUpperCase()] || "";
-                    const count = colorProductCount[c.hex] || 0;
-                    const isSelected = selectedColors.includes(c.hex);
-                    return (
-                      <button key={c.hex} onClick={() => toggleColor(c.hex)} title={`${c.name} (${count})`}
-                        className="flex flex-col items-center gap-0.5">
-                        <span className={`w-7 h-7 rounded-full transition-all ${
-                          isSelected ? "ring-2 ring-black ring-offset-1 scale-110" : "border border-gray-300 hover:scale-105"
-                        }`} style={{ backgroundColor: c.hex }} />
-                        <span className={`text-[9px] leading-none ${isSelected ? "text-black font-bold" : "text-gray-400"}`}>
-                          {code || "·"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* TIPAS — veikiantis su skaičiais */}
-            <div className="mb-4 pb-4 border-b border-gray-100">
-              <button onClick={() => toggleSection("types")} className="w-full flex items-center justify-between py-1 text-left">
-                <h3 className="text-sm font-bold text-gray-900">Tipas</h3>
-                <span className="text-gray-400 text-lg leading-none">{sectionsOpen.types ? "−" : "+"}</span>
-              </button>
-              {sectionsOpen.types && (
-                <div className="mt-3 space-y-0.5">
-                  {availableGenders.map((g) => {
-                    const count = genderProductCount[g] || 0;
-                    const isSelected = selectedGenders.includes(g);
-                    return (
-                      <button key={g} onClick={() => toggleGender(g)}
-                        className={`flex items-center gap-2 text-xs py-1 w-full text-left transition-colors ${
-                          isSelected ? "text-black font-bold" : "text-gray-600 hover:text-black"
-                        }`}>
-                        <span className={`w-3.5 h-3.5 border flex items-center justify-center text-[8px] flex-shrink-0 ${
-                          isSelected ? "border-black bg-black text-white" : "border-gray-300"
-                        }`}>
-                          {isSelected && "✓"}
-                        </span>
-                        <span className="flex-1">{GENDER_MAP[g] || g}</span>
-                        <span className="text-[10px] text-gray-400">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </aside>
-        )}
 
-        {/* PRODUKTAI */}
-        <div className="flex-1">
-          {loading ? (
-            <div className="text-center py-20 text-gray-400">Kraunama...</div>
-          ) : filteredProducts.length > 0 ? (
-            <ProductGrid products={filteredProducts} />
-          ) : (
-            <div className="text-center py-20 text-gray-400">
-              <p>Produktų pagal pasirinktus filtrus nerasta</p>
-              {hasActiveFilters && (
-                <button onClick={clearAllFilters} className="text-black underline mt-4 inline-block text-sm">Valyti filtrus</button>
-              )}
-              {!hasActiveFilters && (
-                <Link href="/" className="text-black underline mt-4 inline-block text-sm">Grįžti į pradžią</Link>
-              )}
-            </div>
-          )}
+          {/* Produktai */}
+          <div className="flex-1 min-w-0">
+            {loading ? (
+              <div className="text-center py-20">
+                <p className="text-lg font-display text-muted">Kraunama...</p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
+              <ProductGrid products={filteredProducts} />
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-lg font-display text-muted mb-4">
+                  Produktų pagal pasirinktus filtrus nerasta
+                </p>
+                {hasActiveFilters ? (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm font-display uppercase tracking-wider text-accent hover:underline"
+                  >
+                    Išvalyti filtrus
+                  </button>
+                ) : (
+                  <Link
+                    href="/"
+                    className="text-sm font-display uppercase tracking-wider text-accent hover:underline"
+                  >
+                    Grįžti į pradžią
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
