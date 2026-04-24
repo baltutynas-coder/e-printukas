@@ -3,12 +3,22 @@
 /**
  * CategoryBento — kategorijų grid homepage'e.
  *
- * Dizaino strategija:
- *   - Šviesios kortelės (paper-soft) — produktų foto su baltu fonu natūraliai
- *     įsilieja (Roly.eu / klasikinis e-komercijos stilius)
- *   - Realūs produktų foto iš backend (pirmo produkto kiekvienoje kategorijoje)
- *   - Foto viršuje (4:3 aspect), tekstas apačioje
+ * Dizainas:
+ *   - Šviesios kortelės (paper-soft), foto viršuje (4:3), tekstas apačioje
+ *   - Realios produktų nuotraukos iš backend'o
  *   - Hover: border → oranžinis, foto padidėja
+ *
+ * Įtrauktos kategorijos (tos, kurios turi produktų backend'e):
+ *   - Marškinėliai ir polo (74)
+ *   - Džemperiai (20)
+ *   - Sportinė kolekcija (38)
+ *   - Kelnės (38)
+ *   - Darbo drabužiai (54)
+ *   - Eco (6)
+ *   - Kiti produktai (15)
+ *
+ * Striukės ir paltai — kol nėra produktų DB'e, ši kategorija nerodoma.
+ * Kai striukės bus įkeltos per admin panelę, jos atsiras automatiškai.
  */
 
 import Link from "next/link";
@@ -23,10 +33,10 @@ export interface BentoCategory {
   heroProductName?: string;
 }
 
+// Aprašymai kiekvienai kategorijai — rodomi po pavadinimu
 const descriptions: Record<string, string> = {
   "marskineliai-ir-polo": "Klasikiniai, polo, sportiniai, su V apykakle",
   dzemperiai: "Su gobtuvu, su užtrauktuku, klasikiniai džemperiai",
-  striukes: "Žieminės, pavasarinės, softshell, liemenės",
   "sportine-kolekcija": "Komandoms, treniruotėms, aktyviam gyvenimui",
   kelnes: "Darbo, sportinės, klasikinės kelnės",
   "darbo-drabuziai": "HORECA, pramonė, medicina, signaliniai",
@@ -34,7 +44,7 @@ const descriptions: Record<string, string> = {
   "kiti-produktai": "Avalynė, aksesuarai ir kiti produktai",
 };
 
-// Prioritetinis ordering'as — svarbiausios kategorijos pirma
+// Prioritetinis rikiavimas — svarbiausios pirma (TOP 6 bus rodoma)
 const priorityOrder = [
   "marskineliai-ir-polo",
   "dzemperiai",
@@ -43,7 +53,6 @@ const priorityOrder = [
   "darbo-drabuziai",
   "eco",
   "kiti-produktai",
-  "striukes",
 ];
 
 interface CategoryBentoProps {

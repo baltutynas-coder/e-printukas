@@ -61,24 +61,16 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /**
- * Tiksli subkategorijų žemėlapis — paremtas realiais backend'o duomenimis.
+ * Subkategorijų žemėlapis — paremtas realiais backend'o duomenimis.
  *
- * Backend'o struktūra:
- *   - /api/categories grąžina 8 tėvines kategorijas be parentId ryšio
- *   - Produktai priskirti subkategorijoms (pvz., „marskineliai", „polo-marskineliai")
- *   - Subkategorijos NĖRA matomos per kategorijų endpoint'ą
- *
- * Todėl ryšį tarp tėvinės ir subkategorijos turim kurti rankiniu būdu pagal
- * verslo logiką (kaip produktai suklasifikuoti DB'e).
- *
- * Pastaba: striukes tėvinė kategorija šiuo metu neturi nei vieno produkto
- * (joks produkto slug'as į ją netelpa). Kol backend'e bus pridėti striukių
- * produktai, ši kategorija nebus rodoma bento grid'e.
+ * Kodėl hardcoded: backend'o /api/categories grąžina 8 tėvines kategorijas
+ * be parentId ryšio. Produktai priskirti subkategorijoms, kurių nėra
+ * kategorijų sąraše. Kai backend'e bus pridėtas parentId mechanizmas,
+ * tai galima pakeisti dinamišku sukūrimu.
  */
 const SUBCATEGORY_MAP: Record<string, string[]> = {
   "marskineliai-ir-polo": ["marskineliai", "polo-marskineliai"],
   dzemperiai: ["su-gobtuvu", "megztiniai"],
-  striukes: [], // Kol kas tuščia — nėra produktų backend'e
   "sportine-kolekcija": [
     "sportiniai-marskineliai",
     "sportines-kelnes",
@@ -99,8 +91,7 @@ const SUBCATEGORY_MAP: Record<string, string[]> = {
  * Kiekvienai tėvinei kategorijai priskiria pirmą produktą su nuotrauka +
  * skaičiuoja bendrą produktų skaičių.
  *
- * Jei kategorija neturi nei vieno produkto — grąžinamas objektas su
- * `productCount: 0`, vėliau filtruojamas CategoryBento komponente.
+ * Kategorijos be produktų automatiškai bus atfiltruotos vėliau (productCount = 0).
  */
 function assignHeroImages(parentCategories: any[], products: any[]): any[] {
   return parentCategories.map((cat: any) => {
@@ -147,7 +138,7 @@ export default async function Home() {
   const parentCategories = categories.filter((c: any) => !c.parentId);
   const categoriesWithImages = assignHeroImages(parentCategories, allProducts);
 
-  // Filtruojam tik tas, kurios turi produktų (kol striukės tuščios, jos nebus rodomos)
+  // Tik tos kategorijos, kurios turi bent vieną produktą
   const visibleCategories = categoriesWithImages.filter(
     (c: any) => c.productCount > 0
   );

@@ -1,158 +1,233 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+/**
+ * WorkwearPromo — specializuotų darbo drabužių promo blokas homepage'e.
+ *
+ * Dizainas (Sprint 2.3 — TRUEWERK DNR):
+ *   - `bg-ink` tamsus fonas — sukuria vizualinį ritmą vs cream aplinka,
+ *     paryškina šią sekciją kaip svarbią B2B klientams (HORECA, pramonė…)
+ *   - Oranžinis `#D0591E` akcentas (ne amber kaip anksčiau)
+ *   - Viršutinė/apatinė oranžinė linija — dera su Hero stats juosta
+ *   - BE auto-rotate — statinis, aiškus, nesiblaškantis
+ *   - 4 kategorijos kaip maži chip'ai (ne milžiniški apskritimai)
+ *   - Produktų grid su realiais foto iš backend'o (4 kol, 8 produktai)
+ *   - Framer Motion scroll reveal — dera su kitomis sekcijomis
+ *
+ * Duomenys:
+ *   - `products` — jau prefiltruoti iš page.tsx (tik darbo drabužių kategorijos)
+ *   - Rodome pirmus 8 — daugiau paraginama per CTA mygtuką
+ */
 
-// Subkategorijos su Roly stiliaus nuotraukomis
-const categories = [
-  { name: "Signaliniai", slug: "signaliniai-drabuziai", image: "https://static.gorfactory.es/images/models/9310/views/large/p_9310_221_1_1.jpg", color: "#CCFF00" },
-  { name: "HORECA", slug: "horeca", image: "https://static.gorfactory.es/images/models/5506/views/large/p_5506_01_1_1.jpg", color: "#FFFFFF" },
-  { name: "Pramonė", slug: "pramone", image: "https://static.gorfactory.es/images/models/9317/views/large/p_9317_221_1_1.jpg", color: "#FF6600" },
-  { name: "Medicina", slug: "medicina-ir-grozis", image: "https://static.gorfactory.es/images/models/6683/views/large/p_6683_01_1_1.jpg", color: "#C4DDF1" },
-];
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "./primitives/Button";
 
 interface WorkwearPromoProps {
   products: any[];
 }
 
+// Subkategorijos — maži chip'ai po headline'ine
+const subcategories = [
+  { name: "HORECA", slug: "horeca" },
+  { name: "Signaliniai", slug: "signaliniai-drabuziai" },
+  { name: "Pramonė", slug: "pramone" },
+  { name: "Medicina", slug: "medicina-ir-grozis" },
+];
+
 export default function WorkwearPromo({ products }: WorkwearPromoProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(0);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  // Intersection Observer — animacija kai pasirodo ekrane
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.2 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // Auto-rotate kategorijos
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveCategory((prev) => (prev + 1) % categories.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
+  // Rodome pirmus 8 produktus — gražus 4x2 grid'as desktop'e
+  const featured = products.slice(0, 8);
 
   return (
-    <section ref={sectionRef} className="relative bg-gray-950 text-white overflow-hidden">
-      {/* Amber akcentinės linijos */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+    <section
+      className="relative overflow-hidden"
+      style={{ backgroundColor: "var(--color-ink)" }}
+      aria-labelledby="workwear-heading"
+    >
+      {/* Viršutinė oranžinė linija */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px"
+        style={{ backgroundColor: "var(--color-accent)" }}
+        aria-hidden="true"
+      />
 
-      {/* Animuotas fono gradientas */}
-      <div className="absolute inset-0 opacity-20">
-        <div
-          className="absolute inset-0 transition-all duration-[2000ms] ease-in-out"
-          style={{
-            background: `radial-gradient(ellipse at 70% 50%, ${categories[activeCategory].color}22 0%, transparent 70%)`,
-          }}
-        />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-20 relative z-10">
-        {/* Pavadinimas su animuotu atsiradimu */}
-        <div className={`text-center mb-14 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <span className="text-amber-400 text-xs font-bold uppercase tracking-[0.3em] block mb-4">e.printukas</span>
-          <h2 className="text-5xl font-black uppercase tracking-tight font-[family-name:var(--font-montserrat)]">
-            <span className="text-amber-400">Darbo</span> drabužiai
+      <div className="container-content py-16 lg:py-24">
+        {/* Antraštės dalis */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-2xl mb-10 lg:mb-14"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              className="w-8 h-px"
+              style={{ backgroundColor: "var(--color-accent)" }}
+              aria-hidden="true"
+            />
+            <span className="text-xs font-display font-medium uppercase tracking-widest text-accent">
+              Specializuotos kategorijos
+            </span>
+          </div>
+          <h2
+            id="workwear-heading"
+            className="text-4xl lg:text-5xl font-display font-semibold tracking-tight mb-4"
+            style={{ color: "var(--color-paper)" }}
+          >
+            Darbo drabužiai.
           </h2>
-          <p className="text-gray-500 mt-4 max-w-md mx-auto text-sm leading-relaxed">
-            Saugūs ir patogūs drabužiai profesionalams. Kiekvienai darbo aplinkai — nuo statybų iki restoranų.
+          <p
+            className="text-base lg:text-lg leading-relaxed"
+            style={{ color: "rgba(245, 242, 234, 0.65)" }}
+          >
+            Saugūs ir patogūs drabužiai profesionalams. Kiekvienai darbo
+            aplinkai — nuo statybviečių iki restoranų virtuvių.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Kategorijų apskritimai — Roly stilius */}
-        <div className={`flex justify-center gap-8 md:gap-12 mb-16 transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          {categories.map((cat, i) => (
+        {/* Subkategorijų chip'ai */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{
+            duration: 0.5,
+            delay: 0.1,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="flex flex-wrap gap-2 mb-10 lg:mb-12"
+        >
+          {subcategories.map((sub) => (
             <Link
-              key={cat.slug}
-              href={`/kategorija/${cat.slug}`}
-              className="group flex flex-col items-center gap-3"
-              onMouseEnter={() => setActiveCategory(i)}
+              key={sub.slug}
+              href={`/kategorija/${sub.slug}`}
+              className="inline-flex items-center px-4 py-2 text-xs font-display font-medium uppercase tracking-widest rounded-sm border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              style={{
+                color: "var(--color-paper)",
+                borderColor: "rgba(245, 242, 234, 0.2)",
+                backgroundColor: "transparent",
+              }}
             >
-              <div
-                className={`w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 transition-all duration-500 ${
-                  activeCategory === i
-                    ? "border-amber-400 scale-110 shadow-lg shadow-amber-400/20"
-                    : "border-gray-700 group-hover:border-gray-500"
-                }`}
-              >
-                <div className="w-full h-full bg-gray-800 flex items-center justify-center overflow-hidden">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
-              </div>
-              <span
-                className={`text-xs font-bold uppercase tracking-wider transition-colors duration-300 ${
-                  activeCategory === i ? "text-amber-400" : "text-gray-500 group-hover:text-gray-300"
-                }`}
-              >
-                {cat.name}
+              <span className="hover:text-accent transition-colors">
+                {sub.name}
               </span>
             </Link>
           ))}
-        </div>
+        </motion.div>
 
-        {/* Produktų carousel — horizontalus su hover efektais */}
-        {products.length > 0 && (
-          <div className={`transition-all duration-1000 delay-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x">
-              {products.map((p: any) => (
-                <Link
-                  key={p.id}
-                  href={`/produktas/${p.slug}`}
-                  className="flex-shrink-0 w-52 group snap-start"
-                >
-                  <div className="relative bg-gray-900 border border-gray-800 group-hover:border-amber-400/30 transition-all duration-300 aspect-square flex items-center justify-center overflow-hidden">
-                    {p.images?.[0]?.url && (
-                      <img
-                        src={p.images[0].url}
-                        alt={p.name}
-                        className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-500"
-                      />
+        {/* Produktų grid'as — 2 kol mobile, 4 desktop */}
+        {featured.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-10 lg:mb-12"
+          >
+            {featured.map((p: any) => (
+              <Link
+                key={p.id}
+                href={`/produktas/${p.slug}`}
+                className="group block rounded-sm overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                style={{ backgroundColor: "var(--color-graphite)" }}
+              >
+                {/* Foto konteineris — baltas fonas */}
+                <div className="relative aspect-square bg-white overflow-hidden">
+                  {p.images?.[0]?.url && (
+                    <img
+                      src={p.images[0].url}
+                      alt={p.name}
+                      className="absolute inset-0 w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500 ease-out"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+
+                {/* Info apačioje */}
+                <div className="p-3 lg:p-4">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span
+                      className="text-sm font-display font-semibold truncate"
+                      style={{ color: "var(--color-paper)" }}
+                    >
+                      {p.name}
+                    </span>
+                    <span
+                      className="text-[10px] font-display uppercase tracking-wider flex-shrink-0"
+                      style={{ color: "rgba(245, 242, 234, 0.4)" }}
+                    >
+                      {p.sku}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-display font-semibold text-accent">
+                      {parseFloat(p.price).toFixed(2)} €
+                    </span>
+                    {p.comparePrice && (
+                      <span
+                        className="text-[10px] line-through"
+                        style={{ color: "rgba(245, 242, 234, 0.3)" }}
+                      >
+                        {parseFloat(p.comparePrice).toFixed(2)} €
+                      </span>
                     )}
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-amber-400/0 group-hover:bg-amber-400/5 transition-colors duration-300" />
                   </div>
-                  <div className="mt-3 px-1">
-                    <span className="text-sm font-bold uppercase text-white group-hover:text-amber-400 transition-colors">{p.name}</span>
-                    <span className="text-[10px] text-gray-600 ml-2">{p.sku}</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm font-bold text-amber-400">{parseFloat(p.price).toFixed(2)} €</span>
-                      {p.comparePrice && (
-                        <span className="text-[10px] text-gray-600 line-through">{parseFloat(p.comparePrice).toFixed(2)} €</span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+                </div>
+              </Link>
+            ))}
+          </motion.div>
         )}
 
-        {/* CTA mygtukas */}
-        <div className={`text-center mt-10 transition-all duration-1000 delay-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <Link
-            href="/kategorija/darbo-drabuziai"
-            className="inline-block bg-amber-400 text-black font-bold px-10 py-4 text-sm uppercase tracking-wider hover:bg-amber-300 transition-colors"
-          >
-            Žiūrėti visus darbo drabužius →
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{
+            duration: 0.5,
+            delay: 0.3,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="flex justify-center"
+        >
+          <Link href="/kategorija/darbo-drabuziai">
+            <Button
+              intent="primary"
+              size="lg"
+              iconRight={
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              }
+            >
+              Peržiūrėti visus darbo drabužius
+            </Button>
           </Link>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Apatinė amber linija */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+      {/* Apatinė oranžinė linija */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px"
+        style={{ backgroundColor: "var(--color-accent)" }}
+        aria-hidden="true"
+      />
     </section>
   );
 }
-
