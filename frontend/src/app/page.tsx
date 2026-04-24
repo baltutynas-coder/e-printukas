@@ -1,19 +1,11 @@
 /**
  * Home Page — homepage'o entry point.
  *
- * Server Component (pagal Next.js 16 App Router konvenciją) — duomenys
- * fetch'inami serveryje, HTML ateina pilnai paruoštas naršyklei.
- *
- * Struktūra (po Sprint 2.2 pertvarkos):
- *   1. HeroSlider       — pagrindinis įvadas (Sprint 2.1)
- *   2. CategoryBento    — 6 kategorijų grid (Sprint 2.2, pakeičia 2 dubliuotas sekcijas)
- *   3. Rekomenduojamos  — 9 random produktai (bus perrašyta Sprint 3)
- *   4. WorkwearPromo    — darbo drabužių specialus blokas (bus perrašytas Sprint 2.3)
- *
- * Pašalinta:
- *   - Senas 4-kategorijų bento (jau atspindima CategoryBento)
- *   - Kategorijų mygtukų juosta (tos pačios kategorijos, dubliavimas)
- *   - „Ko negalima praleisti" 3 kortelės (trečias tos pačios info kartojimas)
+ * Struktūra:
+ *   1. HeroSlider       — pagrindinis įvadas
+ *   2. CategoryBento    — kategorijų grid (tik tos, kurios turi produktų)
+ *   3. Rekomenduojamos  — 9 random produktai
+ *   4. WorkwearPromo    — darbo drabužių specialus blokas
  */
 
 import ProductGrid from "@/components/ProductGrid";
@@ -22,18 +14,13 @@ import WorkwearPromo from "@/components/WorkwearPromo";
 import CategoryBento from "@/components/CategoryBento";
 
 // =============================================================================
-// DUOMENŲ FETCH'AI — serverio pusėje
+// DUOMENŲ FETCH'AI
 // =============================================================================
 
-/**
- * Visų produktų gavimas (limit 50 — pakanka homepage rekomendacijoms).
- * `cache: "no-store"` — visada šviežūs duomenys (nereikia ISR dėl produkto
- * keitimosi dažnumo).
- */
 async function getProducts() {
   try {
     const res = await fetch(
-      "https://e-printukas-production.up.railway.app/api/products?limit=50",
+      "https://e-printukas-production.up.railway.app/api/products?limit=300",
       { cache: "no-store" }
     );
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
@@ -45,9 +32,6 @@ async function getProducts() {
   }
 }
 
-/**
- * Visų kategorijų gavimas — gauname plokščią sąrašą, po to filtruojame tėvines.
- */
 async function getCategories() {
   try {
     const res = await fetch(
@@ -67,10 +51,6 @@ async function getCategories() {
 // HELPER'IAI
 // =============================================================================
 
-/**
- * Fisher–Yates shuffle — tvarkingas masyvo maišymas.
- * Kiekvienas elementas turi vienodą tikimybę patekti į bet kurią poziciją.
- */
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -80,29 +60,100 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/**
+ * Tiksli subkategorijų žemėlapis — paremtas realiais backend'o duomenimis.
+ *
+ * Backend'o struktūra:
+ *   - /api/categories grąžina 8 tėvines kategorijas be parentId ryšio
+ *   - Produktai priskirti subkategorijoms (pvz., „marskineliai", „polo-marskineliai")
+ *   - Subkategorijos NĖRA matomos per kategorijų endpoint'ą
+ *
+ * Todėl ryšį tarp tėvinės ir subkategorijos turim kurti rankiniu būdu pagal
+ * verslo logiką (kaip produktai suklasifikuoti DB'e).
+ *
+ * Pastaba: striukes tėvinė kategorija šiuo metu neturi nei vieno produkto
+ * (joks produkto slug'as į ją netelpa). Kol backend'e bus pridėti striukių
+ * produktai, ši kategorija nebus rodoma bento grid'e.
+ */
+const SUBCATEGORY_MAP: Record<string, string[]> = {
+  "marskineliai-ir-polo": ["marskineliai", "polo-marskineliai"],
+  dzemperiai: ["su-gobtuvu", "megztiniai"],
+  striukes: [], // Kol kas tuščia — nėra produktų backend'e
+  "sportine-kolekcija": [
+    "sportiniai-marskineliai",
+    "sportines-kelnes",
+    "sportiniai-komplektai",
+  ],
+  kelnes: ["kelnes"],
+  "darbo-drabuziai": [
+    "horeca",
+    "signaliniai-drabuziai",
+    "medicina-ir-grozis",
+    "pramone",
+  ],
+  eco: ["eco"],
+  "kiti-produktai": ["avalyne"],
+};
+
+/**
+ * Kiekvienai tėvinei kategorijai priskiria pirmą produktą su nuotrauka +
+ * skaičiuoja bendrą produktų skaičių.
+ *
+ * Jei kategorija neturi nei vieno produkto — grąžinamas objektas su
+ * `productCount: 0`, vėliau filtruojamas CategoryBento komponente.
+ */
+function assignHeroImages(parentCategories: any[], products: any[]): any[] {
+  return parentCategories.map((cat: any) => {
+    const matchingSlugs = [
+      cat.slug,
+      ...(SUBCATEGORY_MAP[cat.slug] || []),
+    ];
+
+    const firstProduct = products.find(
+      (p: any) =>
+        matchingSlugs.includes(p.category?.slug) &&
+        p.images &&
+        p.images.length > 0
+    );
+
+    const productCount = products.filter((p: any) =>
+      matchingSlugs.includes(p.category?.slug)
+    ).length;
+
+    return {
+      ...cat,
+      heroImage: firstProduct?.images?.[0]?.url,
+      heroProductName: firstProduct?.name,
+      productCount,
+    };
+  });
+}
+
 // =============================================================================
 // PAGRINDINIS KOMPONENTAS
 // =============================================================================
 
 export default async function Home() {
-  // Lygiagretus duomenų gavimas — greičiau nei vienas po kito
   const [products, categories] = await Promise.all([
     getProducts(),
     getCategories(),
   ]);
 
-  // Filtruojam tik tuos produktus, kurie turi nuotraukų
   const allProducts = products.filter(
     (p: any) => p.images && p.images.length > 0
   );
 
-  // Tėvinės kategorijos (be parentId) — naudojamos Bento grid'e
+  // Tėvinės kategorijos su priskirtomis foto
   const parentCategories = categories.filter((c: any) => !c.parentId);
+  const categoriesWithImages = assignHeroImages(parentCategories, allProducts);
 
-  // Paimam 9 atsitiktinius produktus rekomendacijoms
+  // Filtruojam tik tas, kurios turi produktų (kol striukės tuščios, jos nebus rodomos)
+  const visibleCategories = categoriesWithImages.filter(
+    (c: any) => c.productCount > 0
+  );
+
   const randomProducts = shuffle(allProducts).slice(0, 9);
 
-  // Darbo drabužių produktai — WorkwearPromo sekcijai
   const darboProducts = allProducts.filter((p: any) => {
     const cat = p.category?.slug;
     return (
@@ -115,13 +166,10 @@ export default async function Home() {
 
   return (
     <div>
-      {/* 1. HERO — pagrindinis įvadas */}
       <HeroSlider />
 
-      {/* 2. CATEGORY BENTO — 6 kategorijos, TRUEWERK „Shop by" stilius */}
-      <CategoryBento categories={parentCategories} />
+      <CategoryBento categories={visibleCategories} />
 
-      {/* 3. REKOMENDUOJAMOS PREKĖS — 9 atsitiktiniai produktai */}
       <section
         id="produktai"
         className="container-content py-14 lg:py-20"
@@ -149,7 +197,6 @@ export default async function Home() {
         <ProductGrid products={randomProducts} />
       </section>
 
-      {/* 4. DARBO DRABUŽIAI — specialus promo blokas */}
       <WorkwearPromo products={darboProducts} />
     </div>
   );

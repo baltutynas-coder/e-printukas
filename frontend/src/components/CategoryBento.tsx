@@ -1,18 +1,14 @@
 "use client";
 
 /**
- * CategoryBento — pagrindinis kategorijų pasirinkimo blokas.
+ * CategoryBento — kategorijų grid homepage'e.
  *
- * Dizaino strategija (TRUEWERK-inspired):
- *   - Tipografinis dizainas be foto (banner'iai nesiderino su aprašymais)
- *   - Tamsus gradient + dideli numeriai (01, 02…) + didelė tipografija
- *   - Kas antra kortelė gauna oranžinį blob hover metu
- *
- * Techninė pastaba:
- *   - h3 naudojame inline style vietoj text-paper Tailwind klasės, nes
- *     globals.css turi `h1-h6 { color: var(--color-ink); }` taisyklę, kurios
- *     specificity aukštesnis už utility klasę. Inline stilius turi aukščiausią
- *     specificity ir patikimai override'ina.
+ * Dizaino strategija:
+ *   - Šviesios kortelės (paper-soft) — produktų foto su baltu fonu natūraliai
+ *     įsilieja (Roly.eu / klasikinis e-komercijos stilius)
+ *   - Realūs produktų foto iš backend (pirmo produkto kiekvienoje kategorijoje)
+ *   - Foto viršuje (4:3 aspect), tekstas apačioje
+ *   - Hover: border → oranžinis, foto padidėja
  */
 
 import Link from "next/link";
@@ -23,6 +19,8 @@ export interface BentoCategory {
   name: string;
   slug: string;
   productCount?: number;
+  heroImage?: string;
+  heroProductName?: string;
 }
 
 const descriptions: Record<string, string> = {
@@ -32,15 +30,20 @@ const descriptions: Record<string, string> = {
   "sportine-kolekcija": "Komandoms, treniruotėms, aktyviam gyvenimui",
   kelnes: "Darbo, sportinės, klasikinės kelnės",
   "darbo-drabuziai": "HORECA, pramonė, medicina, signaliniai",
+  eco: "Ekologiška tekstilė iš atsakingų šaltinių",
+  "kiti-produktai": "Avalynė, aksesuarai ir kiti produktai",
 };
 
+// Prioritetinis ordering'as — svarbiausios kategorijos pirma
 const priorityOrder = [
   "marskineliai-ir-polo",
   "dzemperiai",
-  "striukes",
   "sportine-kolekcija",
   "kelnes",
   "darbo-drabuziai",
+  "eco",
+  "kiti-produktai",
+  "striukes",
 ];
 
 interface CategoryBentoProps {
@@ -86,10 +89,8 @@ export default function CategoryBento({ categories }: CategoryBentoProps) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {sortedCategories.map((cat, index) => {
-            const hasAccent = index % 2 === 0;
-            const number = String(index + 1).padStart(2, "0");
             const description = descriptions[cat.slug] || "";
 
             return (
@@ -106,56 +107,50 @@ export default function CategoryBento({ categories }: CategoryBentoProps) {
               >
                 <Link
                   href={`/kategorija/${cat.slug}`}
-                  className="group relative block overflow-hidden aspect-[4/5] bg-graphite rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+                  className="group relative block bg-paper-soft border border-line rounded-md overflow-hidden transition-all duration-300 hover:border-accent hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
                 >
-                  {/* Tamsus gradient fonas */}
-                  <div
-                    className="absolute inset-0 bg-gradient-to-br from-graphite via-ink to-ink"
-                    aria-hidden="true"
-                  />
+                  {/* Foto konteineris su baltu fonu */}
+                  <div className="relative aspect-[4/3] bg-white overflow-hidden">
+                    {cat.heroImage ? (
+                      <img
+                        src={cat.heroImage}
+                        alt={cat.heroProductName || cat.name}
+                        className="absolute inset-0 w-full h-full object-contain p-8 group-hover:scale-105 transition-transform duration-500 ease-out"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-paper-soft to-paper">
+                        <span
+                          className="text-6xl font-display font-bold select-none"
+                          style={{ color: "rgba(14, 14, 14, 0.1)" }}
+                        >
+                          {cat.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Oranžinis blob'as hover metu — kas antrai kortelei */}
-                  {hasAccent && (
-                    <div
-                      className="absolute -top-20 -right-20 w-64 h-64 bg-accent/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      aria-hidden="true"
-                    />
-                  )}
+                    {/* Produktų skaičius badge */}
+                    {cat.productCount !== undefined && cat.productCount > 0 && (
+                      <div className="absolute top-3 right-3 bg-ink text-paper px-2.5 py-1 rounded-sm">
+                        <span className="text-[10px] font-display font-medium uppercase tracking-widest">
+                          {cat.productCount} produktai
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* Viršutinė linija — pasikeičia ant hover */}
-                  <div
-                    className="absolute top-0 left-0 right-0 h-px bg-graphite group-hover:bg-accent transition-colors duration-300"
-                    aria-hidden="true"
-                  />
-
-                  {/* Didelis numeris viršuje */}
-                  <span
-                    className="absolute top-6 right-6 text-5xl font-display font-bold group-hover:text-accent/20 transition-colors duration-500 select-none"
-                    style={{ color: "rgba(245, 242, 234, 0.05)" }}
-                    aria-hidden="true"
-                  >
-                    {number}
-                  </span>
-
-                  {/* Turinys apačioje */}
-                  <div className="absolute inset-0 p-6 lg:p-7 flex flex-col justify-end">
-                    <div className="flex items-center gap-2 mb-3">
+                  {/* Tekstas apačioje */}
+                  <div className="p-5 lg:p-6">
+                    <div className="flex items-center gap-2 mb-2">
                       <span className="w-6 h-px bg-accent" aria-hidden="true" />
-                      {cat.productCount !== undefined && cat.productCount > 0 ? (
-                        <span className="text-[10px] font-display font-medium uppercase tracking-widest text-accent">
-                          {cat.productCount} produktų
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-display font-medium uppercase tracking-widest text-accent">
-                          Kategorija {number}
-                        </span>
-                      )}
+                      <span className="text-[10px] font-display font-medium uppercase tracking-widest text-accent">
+                        Kategorija
+                      </span>
                     </div>
 
-                    {/* H3 su inline spalva — override'ina globals.css reset */}
                     <h3
-                      className="text-2xl lg:text-3xl font-display font-semibold leading-tight mb-2"
-                      style={{ color: "var(--color-paper)" }}
+                      className="text-xl lg:text-2xl font-display font-semibold leading-tight mb-2"
+                      style={{ color: "var(--color-ink)" }}
                     >
                       {cat.name}
                     </h3>
@@ -163,7 +158,7 @@ export default function CategoryBento({ categories }: CategoryBentoProps) {
                     {description && (
                       <p
                         className="text-sm mb-4 line-clamp-2"
-                        style={{ color: "rgba(232, 228, 220, 0.7)" }}
+                        style={{ color: "var(--color-muted)" }}
                       >
                         {description}
                       </p>
