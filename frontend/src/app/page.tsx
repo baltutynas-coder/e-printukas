@@ -1,11 +1,41 @@
+/**
+ * Home Page — homepage'o entry point.
+ *
+ * Server Component (pagal Next.js 16 App Router konvenciją) — duomenys
+ * fetch'inami serveryje, HTML ateina pilnai paruoštas naršyklei.
+ *
+ * Struktūra (po Sprint 2.2 pertvarkos):
+ *   1. HeroSlider       — pagrindinis įvadas (Sprint 2.1)
+ *   2. CategoryBento    — 6 kategorijų grid (Sprint 2.2, pakeičia 2 dubliuotas sekcijas)
+ *   3. Rekomenduojamos  — 9 random produktai (bus perrašyta Sprint 3)
+ *   4. WorkwearPromo    — darbo drabužių specialus blokas (bus perrašytas Sprint 2.3)
+ *
+ * Pašalinta:
+ *   - Senas 4-kategorijų bento (jau atspindima CategoryBento)
+ *   - Kategorijų mygtukų juosta (tos pačios kategorijos, dubliavimas)
+ *   - „Ko negalima praleisti" 3 kortelės (trečias tos pačios info kartojimas)
+ */
+
 import ProductGrid from "@/components/ProductGrid";
 import HeroSlider from "@/components/HeroSlider";
 import WorkwearPromo from "@/components/WorkwearPromo";
-import Link from "next/link";
+import CategoryBento from "@/components/CategoryBento";
 
+// =============================================================================
+// DUOMENŲ FETCH'AI — serverio pusėje
+// =============================================================================
+
+/**
+ * Visų produktų gavimas (limit 50 — pakanka homepage rekomendacijoms).
+ * `cache: "no-store"` — visada šviežūs duomenys (nereikia ISR dėl produkto
+ * keitimosi dažnumo).
+ */
 async function getProducts() {
   try {
-    const res = await fetch("https://e-printukas-production.up.railway.app/api/products?limit=50", { cache: "no-store" });
+    const res = await fetch(
+      "https://e-printukas-production.up.railway.app/api/products?limit=50",
+      { cache: "no-store" }
+    );
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
     const data = await res.json();
     return data.products;
@@ -15,9 +45,15 @@ async function getProducts() {
   }
 }
 
+/**
+ * Visų kategorijų gavimas — gauname plokščią sąrašą, po to filtruojame tėvines.
+ */
 async function getCategories() {
   try {
-    const res = await fetch("https://e-printukas-production.up.railway.app/api/categories", { cache: "no-store" });
+    const res = await fetch(
+      "https://e-printukas-production.up.railway.app/api/categories",
+      { cache: "no-store" }
+    );
     if (!res.ok) throw new Error("Nepavyko gauti kategorijų");
     const data = await res.json();
     return data.categories;
@@ -27,7 +63,15 @@ async function getCategories() {
   }
 }
 
-function shuffle(arr: any[]) {
+// =============================================================================
+// HELPER'IAI
+// =============================================================================
+
+/**
+ * Fisher–Yates shuffle — tvarkingas masyvo maišymas.
+ * Kiekvienas elementas turi vienodą tikimybę patekti į bet kurią poziciją.
+ */
+function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -36,109 +80,77 @@ function shuffle(arr: any[]) {
   return a;
 }
 
+// =============================================================================
+// PAGRINDINIS KOMPONENTAS
+// =============================================================================
+
 export default async function Home() {
-  const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  const allProducts = products.filter((p: any) => p.images && p.images.length > 0);
+  // Lygiagretus duomenų gavimas — greičiau nei vienas po kito
+  const [products, categories] = await Promise.all([
+    getProducts(),
+    getCategories(),
+  ]);
+
+  // Filtruojam tik tuos produktus, kurie turi nuotraukų
+  const allProducts = products.filter(
+    (p: any) => p.images && p.images.length > 0
+  );
+
+  // Tėvinės kategorijos (be parentId) — naudojamos Bento grid'e
   const parentCategories = categories.filter((c: any) => !c.parentId);
+
+  // Paimam 9 atsitiktinius produktus rekomendacijoms
   const randomProducts = shuffle(allProducts).slice(0, 9);
 
-  // Darbo drabužių produktai
+  // Darbo drabužių produktai — WorkwearPromo sekcijai
   const darboProducts = allProducts.filter((p: any) => {
     const cat = p.category?.slug;
-    return cat === "signaliniai-drabuziai" || cat === "horeca" || cat === "pramone" || cat === "medicina-ir-grozis";
+    return (
+      cat === "signaliniai-drabuziai" ||
+      cat === "horeca" ||
+      cat === "pramone" ||
+      cat === "medicina-ir-grozis"
+    );
   });
 
   return (
     <div>
-      {/* HERO SLIDER */}
+      {/* 1. HERO — pagrindinis įvadas */}
       <HeroSlider />
 
-      {/* 4 KATEGORIJŲ KORTELĖS */}
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Link href="/kategorija/marskineliai-ir-polo" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758110/eprintukas/banners/Banner_hombre.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
-            <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
-              <span className="text-white text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Marškinėliai ir polo</span>
-              <span className="text-white/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
-            </div>
-          </Link>
-          <Link href="/kategorija/dzemperiai" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758112/eprintukas/banners/Banner_mujer.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
-            <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
-              <span className="text-white text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Džemperiai ir striukės</span>
-              <span className="text-white/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
-            </div>
-          </Link>
-          <Link href="/kategorija/sportine-kolekcija" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758118/eprintukas/banners/Banner_sportcollection.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
-            <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
-              <span className="text-white text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Sportinė kolekcija</span>
-              <span className="text-white/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
-            </div>
-          </Link>
-          <Link href="/kategorija/darbo-drabuziai" className="group relative overflow-hidden aspect-[3/4] bg-black">
-            <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dulaqsnqg/image/upload/v1776758117/eprintukas/banners/Banner_abrigos.jpg')] bg-cover bg-center opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-t from-amber-900/50 via-transparent to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-end p-5 z-10">
-              <span className="text-amber-400 text-lg font-black font-[family-name:var(--font-montserrat)] uppercase leading-tight">Darbo drabužiai</span>
-              <span className="text-amber-400/40 text-[10px] uppercase tracking-widest mt-2">Žiūrėti →</span>
-            </div>
-          </Link>
-        </div>
-      </section>
+      {/* 2. CATEGORY BENTO — 6 kategorijos, TRUEWERK „Shop by" stilius */}
+      <CategoryBento categories={parentCategories} />
 
-      {/* KATEGORIJŲ MYGTUKAI */}
-      <section className="max-w-7xl mx-auto px-4 pb-8">
-        <div className="flex flex-wrap gap-3 justify-center">
-          {parentCategories.map((cat: any) => (
-            <Link
-              key={cat.id}
-              href={`/kategorija/${cat.slug}`}
-              className="text-sm px-5 py-2.5 border border-gray-200 text-gray-700 hover:border-black hover:text-black transition-colors uppercase tracking-wider font-medium"
+      {/* 3. REKOMENDUOJAMOS PREKĖS — 9 atsitiktiniai produktai */}
+      <section
+        id="produktai"
+        className="container-content py-14 lg:py-20"
+        aria-labelledby="products-heading"
+      >
+        <div className="flex items-end justify-between mb-8 lg:mb-10">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-8 h-px bg-accent" aria-hidden="true" />
+              <span className="text-xs font-display font-medium uppercase tracking-widest text-accent">
+                Rekomenduojamos
+              </span>
+            </div>
+            <h2
+              id="products-heading"
+              className="text-3xl lg:text-4xl font-display font-semibold tracking-tight text-ink"
             >
-              {cat.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* REKOMENDUOJAMOS PREKĖS */}
-      <section id="produktai" className="max-w-7xl mx-auto px-4 pb-14">
-        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-          <h2 className="text-xl font-black uppercase tracking-tight font-[family-name:var(--font-montserrat)]">Rekomenduojamos prekės</h2>
-          <span className="text-sm text-gray-400">{randomProducts.length} produktų</span>
+              Populiariausios prekės
+            </h2>
+          </div>
+          <span className="text-sm text-muted font-display uppercase tracking-wider">
+            {randomProducts.length} produktų
+          </span>
         </div>
         <ProductGrid products={randomProducts} />
       </section>
 
-      {/* DARBO DRABUŽIAI — animuota promo sekcija */}
+      {/* 4. DARBO DRABUŽIAI — specialus promo blokas */}
       <WorkwearPromo products={darboProducts} />
-
-      {/* KO NEGALIMA PRALEISTI */}
-      <section className="bg-gray-50 py-14">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-xl font-black uppercase tracking-tight font-[family-name:var(--font-montserrat)] mb-8 text-center">Ko negalima praleisti</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 border border-gray-100 hover:border-gray-300 transition-colors">
-              <h3 className="text-lg font-black uppercase mb-3 font-[family-name:var(--font-montserrat)]">Sportinė kolekcija</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-4">Techniniai marškinėliai, sportiniai komplektai, kelnės. Viskas ko reikia treniruotėms ir aktyviam gyvenimui.</p>
-              <Link href="/kategorija/sportine-kolekcija" className="text-xs font-bold uppercase tracking-widest hover:underline">Žiūrėti →</Link>
-            </div>
-            <div className="bg-white p-6 border border-gray-100 hover:border-gray-300 transition-colors">
-              <h3 className="text-lg font-black uppercase mb-3 font-[family-name:var(--font-montserrat)]">Striukės ir paltai</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-4">Drabužiai šalčiausiam metų laikui. Liemenės, softshell, striukės. Apsaugokite save nuo šalčio kokybiškomis tekstilėmis.</p>
-              <Link href="/kategorija/striukes" className="text-xs font-bold uppercase tracking-widest hover:underline">Žiūrėti →</Link>
-            </div>
-            <div className="bg-white p-6 border border-gray-100 hover:border-gray-300 transition-colors">
-              <h3 className="text-lg font-black uppercase mb-3 font-[family-name:var(--font-montserrat)]">Marškinėliai ir polo</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-4">Raskite savo mėgstamiausius trumpomis ar ilgomis rankovėmis polo ar marškinėlius, tinkamus dėvėti visus metus.</p>
-              <Link href="/kategorija/marskineliai-ir-polo" className="text-xs font-bold uppercase tracking-widest hover:underline">Žiūrėti →</Link>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
-
