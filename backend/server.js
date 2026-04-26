@@ -1,6 +1,8 @@
 // ============================================
 // e.printukas.lt — Pagrindinis serveris
 // ============================================
+//
+// Sprint B atnaujinimas: pridėtas /api/tags maršrutas
 
 const express = require('express');
 const cors = require('cors');
@@ -17,10 +19,12 @@ const PORT = process.env.PORT || 4000;
 
 app.use(helmet());
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+  })
+);
 
 // JSON parsing — visa kita
 app.use(express.json({ limit: '10mb' }));
@@ -29,7 +33,7 @@ app.use(express.json({ limit: '10mb' }));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: { error: 'Per daug užklausų, bandykite vėliau' }
+  message: { error: 'Per daug užklausų, bandykite vėliau' },
 });
 app.use('/api/', limiter);
 
@@ -41,7 +45,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     message: 'e.printukas.lt API veikia!',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -50,7 +54,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/upload', require('./routes/upload'));
-
+app.use('/api/tags', require('./routes/tags')); // SPRINT B — tag'ai (progos + pramonė)
 
 // ============================================
 // 3. KLAIDŲ TVARKYMAS
@@ -61,9 +65,10 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('❌ Klaida:', err.message);
+  console.error('❯ Klaida:', err.message);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Serverio klaida'
+    error:
+      process.env.NODE_ENV === 'development' ? err.message : 'Serverio klaida',
   });
 });
 
@@ -74,9 +79,8 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`
   ╔══════════════════════════════════════╗
-  ║  🖨️  e.printukas.lt API serveris     ║
-  ║  📍 http://localhost:${PORT}            ║
-  ║  🌍 Aplinka: ${process.env.NODE_ENV || 'development'}        ║
+  ║  🚀 e.printukas.lt API — port ${PORT}    ║
+  ║  📦 Aplinka: ${(process.env.NODE_ENV || 'development').padEnd(20, ' ')} ║
   ╚══════════════════════════════════════╝
   `);
 });

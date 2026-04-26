@@ -3,25 +3,23 @@
 /**
  * Admin produktų puslapis — /admin/produktai
  *
- * Sprint 5.3 redesign:
- *   - TRUEWERK stilius (cream/white, accent orange)
- *   - Space Grotesk antraštės
- *   - Baltos kortelės su border, ne pilki divai
- *   - Oranžiniai primary mygtukai vietoj juodų
+ * Sprint B atnaujinimas:
+ *   - Pridėtas tag'ų multi-select formoje (2 grupės: PROGOS + PRAMONĖS)
+ *   - Tag'ai rodomi produkto kortelėje sąraše
+ *   - handleSave siunčia tagIds per /api/backend/products
  *
- * Pataisymai:
- *   - Kategorijos fetch'as per `/api/backend/categories` proxy (ne Railway tiesiai)
- *   - Nuotraukų įkėlimas per `/api/backend/upload` proxy (ne Railway tiesiai)
- *
- * Logika nekeista:
- *   - CRUD: POST/PUT/DELETE /products per adminFetch
- *   - Foto įkėlimas: multipart/form-data su FormData
- *   - Foto trynimas: DELETE /upload/:id
- *   - Published toggle: PUT /products/:id su published flag
+ * Sprint 5.3 stilistika nekeista (TRUEWERK).
  */
 
 import { useEffect, useState } from "react";
 import { adminFetch, useAuthStore } from "@/lib/authStore";
+
+interface Tag {
+  id: string;
+  slug: string;
+  name: string;
+  type: "OCCASION" | "INDUSTRY";
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -39,6 +37,8 @@ export default function AdminProductsPage() {
     published: true,
   });
   const [categories, setCategories] = useState<any[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const loadProducts = async () => {
@@ -54,7 +54,6 @@ export default function AdminProductsPage() {
 
   const loadCategories = async () => {
     try {
-      // Naudojam proxy vietoj tiesioginio Railway URL
       const res = await fetch("/api/backend/categories");
       const data = await res.json();
       setCategories(data.categories || []);
@@ -63,10 +62,25 @@ export default function AdminProductsPage() {
     }
   };
 
+  // SPRINT B — užkrauti visus tag'us
+  const loadTags = async () => {
+    try {
+      const res = await fetch("/api/backend/tags");
+      const data = await res.json();
+      setAllTags(data.tags || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadTags();
   }, []);
+
+  const occasionTags = allTags.filter((t) => t.type === "OCCASION");
+  const industryTags = allTags.filter((t) => t.type === "INDUSTRY");
 
   const openForm = (product?: any) => {
     if (product) {
@@ -79,6 +93,8 @@ export default function AdminProductsPage() {
         categoryId: product.categoryId || "",
         published: product.published,
       });
+      // SPRINT B — pre-select esamus tag'us
+      setSelectedTagIds(product.tags?.map((t: Tag) => t.id) || []);
     } else {
       setEditingProduct(null);
       setForm({
@@ -89,8 +105,17 @@ export default function AdminProductsPage() {
         categoryId: "",
         published: true,
       });
+      setSelectedTagIds([]);
     }
     setShowForm(true);
+  };
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
   };
 
   const handleSave = async () => {
@@ -109,6 +134,7 @@ export default function AdminProductsPage() {
             ? parseFloat(form.comparePrice)
             : null,
           categoryId: form.categoryId || null,
+          tagIds: selectedTagIds, // SPRINT B
         }),
       });
       setShowForm(false);
@@ -141,7 +167,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  // Nuotraukos įkėlimas — per proxy
   const handleImageUpload = async (productId: string, files: FileList) => {
     setUploading(true);
     const token = useAuthStore.getState().token;
@@ -326,6 +351,82 @@ export default function AdminProductsPage() {
               </label>
             </div>
           </div>
+
+          {/* SPRINT B — Tag'ų multi-select */}
+          {allTags.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-line">
+              {/* PROGOS */}
+              <div className="mb-5">
+                <label className="block text-xs font-display font-semibold uppercase tracking-widest text-ink mb-3">
+                  Pagal progą {selectedTagIds.length > 0 && (
+                    <span className="text-muted font-normal">
+                      ({occasionTags.filter((t) => selectedTagIds.includes(t.id)).length} pasirinkta)
+                    </span>
+                  )}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {occasionTags.map((tag) => {
+                    const isSelected = selectedTagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                        className="text-xs font-display font-medium px-3 py-2 rounded-sm border transition-all"
+                        style={{
+                          backgroundColor: isSelected
+                            ? "var(--color-accent)"
+                            : "white",
+                          color: isSelected ? "white" : "var(--color-ink)",
+                          borderColor: isSelected
+                            ? "var(--color-accent)"
+                            : "var(--color-line-strong)",
+                        }}
+                      >
+                        {isSelected && "✓ "}{tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* PRAMONĖS */}
+              <div>
+                <label className="block text-xs font-display font-semibold uppercase tracking-widest text-ink mb-3">
+                  Pagal pramonę {selectedTagIds.length > 0 && (
+                    <span className="text-muted font-normal">
+                      ({industryTags.filter((t) => selectedTagIds.includes(t.id)).length} pasirinkta)
+                    </span>
+                  )}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {industryTags.map((tag) => {
+                    const isSelected = selectedTagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                        className="text-xs font-display font-medium px-3 py-2 rounded-sm border transition-all"
+                        style={{
+                          backgroundColor: isSelected
+                            ? "var(--color-ink)"
+                            : "white",
+                          color: isSelected ? "white" : "var(--color-ink)",
+                          borderColor: isSelected
+                            ? "var(--color-ink)"
+                            : "var(--color-line-strong)",
+                        }}
+                      >
+                        {isSelected && "✓ "}{tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3 mt-6">
             <button
               onClick={handleSave}
@@ -436,6 +537,24 @@ export default function AdminProductsPage() {
                       {product.published ? "Aktyvus" : "Juodraštis"}
                     </span>
                   </button>
+                  {/* SPRINT B — supplier badge */}
+                  {product.supplier && (
+                    <span
+                      className="text-[10px] font-display font-medium uppercase tracking-widest px-2 py-0.5 rounded-sm"
+                      style={{
+                        backgroundColor:
+                          product.supplier === "STAMINA"
+                            ? "rgba(208, 89, 30, 0.1)"
+                            : "rgba(14, 14, 14, 0.05)",
+                        color:
+                          product.supplier === "STAMINA"
+                            ? "var(--color-accent)"
+                            : "var(--color-muted)",
+                      }}
+                    >
+                      {product.supplier}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-muted font-display mb-2">
                   {product.category?.name || "—"} ·{" "}
@@ -451,6 +570,33 @@ export default function AdminProductsPage() {
                     </span>
                   )}
                 </div>
+                {/* SPRINT B — tag'ų chips */}
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2 mb-2">
+                    {product.tags.map((tag: Tag) => (
+                      <span
+                        key={tag.id}
+                        className="text-[10px] font-display px-2 py-0.5 rounded-sm border"
+                        style={{
+                          backgroundColor:
+                            tag.type === "OCCASION"
+                              ? "rgba(208, 89, 30, 0.08)"
+                              : "rgba(14, 14, 14, 0.05)",
+                          borderColor:
+                            tag.type === "OCCASION"
+                              ? "var(--color-accent)"
+                              : "var(--color-line-strong)",
+                          color:
+                            tag.type === "OCCASION"
+                              ? "var(--color-accent)"
+                              : "var(--color-ink)",
+                        }}
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {/* Spalvos */}
                 <div className="flex gap-1">
                   {[
