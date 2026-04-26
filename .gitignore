@@ -11,3 +11,6 @@ frontend/public/images/*.webp
 
 # Roly konfidencialûs kainoraðèiai
 pricelist-*.xlsx
+
+backend/stamina-pricelist.xlsx
+backend/data/pricelist-stamina-int.xlsx
