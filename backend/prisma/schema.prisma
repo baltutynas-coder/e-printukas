@@ -1,4 +1,11 @@
 // Prisma schema — e.printukas.lt duomenų bazės struktūra
+//
+// Sprint A pakeitimai:
+//   - Pridėtas Supplier enum (ROLY | STAMINA) — produkto kilmė
+//   - Pridėtas Product.supplier laukas (default: ROLY)
+//   - Pridėtas Tag modelis (OCCASION | INDUSTRY tipo žymėjimas)
+//   - Pridėta ProductTag jungiamoji lentelė (many-to-many)
+//   - Product.tags ryšys į ProductTag
 
 generator client {
   provider = "prisma-client-js"
@@ -58,11 +65,20 @@ model Product {
   sku         String?  @unique
   published   Boolean  @default(false)
   gender      Gender   @default(UNISEX)
+
+  // Sprint A: Tiekėjas (Roly esami / Stamina nauji)
+  supplier    Supplier @default(ROLY)
+
   categoryId String?   @map("category_id")
   category   Category? @relation(fields: [categoryId], references: [id])
-  images   ProductImage[]
-  variants ProductVariant[]
+
+  images     ProductImage[]
+  variants   ProductVariant[]
   orderItems OrderItem[]
+
+  // Sprint A: Tag'ai (progoms ir pramonėms)
+  tags       ProductTag[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@map("products")
@@ -73,6 +89,12 @@ enum Gender {
   WOMEN
   UNISEX
   CHILDREN
+}
+
+// Sprint A — produkto tiekėjas
+enum Supplier {
+  ROLY     // 245 esami drabužiai
+  STAMINA  // Dovanos, aksesuarai (importuosim)
 }
 
 model ProductImage {
@@ -96,6 +118,59 @@ model ProductVariant {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
   @@map("product_variants")
+}
+
+// ============================================
+// SPRINT A — TAG'AI (progos ir pramonė)
+// ============================================
+//
+// Vienas produktas → daug tag'ų (per ProductTag)
+// Vienas tag'as → daug produktų (per ProductTag)
+//
+// Naudojimas:
+//   - OCCASION tag'ai: „verslo-dovanos", „kaledos", „welcome-kit"
+//   - INDUSTRY tag'ai: „horeca", „it-finansai", „statyba-pramone"
+//
+// SEO landing puslapiai automatiškai generuojami iš tag'ų:
+//   /pagal-proga/verslo-dovanos
+//   /pagal-pramone/horeca
+// ============================================
+
+model Tag {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  type        TagType
+  description String?  @db.Text   // Trumpas SEO description (~155 char)
+  heroText    String?  @map("hero_text") @db.Text  // Landing puslapio H1+intro
+  sortOrder   Int      @default(0) @map("sort_order")
+
+  products    ProductTag[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("tags")
+}
+
+enum TagType {
+  OCCASION   // Pagal progą (verslo dovanos, kalėdos, welcome kit...)
+  INDUSTRY   // Pagal pramonę (HORECA, IT, statyba...)
+}
+
+// Jungiamoji lentelė many-to-many ryšiui
+model ProductTag {
+  productId String   @map("product_id")
+  tagId     String   @map("tag_id")
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([productId, tagId])
+  @@index([tagId])
+  @@map("product_tags")
 }
 
 // ============================================
