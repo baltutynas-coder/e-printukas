@@ -1,17 +1,19 @@
 /**
  * Home Page — homepage'o entry point.
  *
- * Struktūra:
+ * Struktūra (Sprint 8.1 atnaujinimas):
  *   1. HeroSlider       — pagrindinis įvadas
  *   2. CategoryBento    — kategorijų grid (tik tos, kurios turi produktų)
- *   3. Rekomenduojamos  — 9 random produktai
- *   4. WorkwearPromo    — darbo drabužių specialus blokas
+ *   3. ValueProps       — 3 B2B value props („Kodėl mes") — NAUJAS
+ *   4. Rekomenduojamos  — 9 random produktai
+ *   5. WorkwearPromo    — darbo drabužių specialus blokas
  */
 
 import ProductGrid from "@/components/ProductGrid";
 import HeroSlider from "@/components/HeroSlider";
 import WorkwearPromo from "@/components/WorkwearPromo";
 import CategoryBento from "@/components/CategoryBento";
+import ValueProps from "@/components/ValueProps";
 
 // =============================================================================
 // DUOMENŲ FETCH'AI
@@ -60,14 +62,6 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-/**
- * Subkategorijų žemėlapis — paremtas realiais backend'o duomenimis.
- *
- * Kodėl hardcoded: backend'o /api/categories grąžina 8 tėvines kategorijas
- * be parentId ryšio. Produktai priskirti subkategorijoms, kurių nėra
- * kategorijų sąraše. Kai backend'e bus pridėtas parentId mechanizmas,
- * tai galima pakeisti dinamišku sukūrimu.
- */
 const SUBCATEGORY_MAP: Record<string, string[]> = {
   "marskineliai-ir-polo": ["marskineliai", "polo-marskineliai"],
   dzemperiai: ["su-gobtuvu", "megztiniai"],
@@ -87,18 +81,9 @@ const SUBCATEGORY_MAP: Record<string, string[]> = {
   "kiti-produktai": ["avalyne"],
 };
 
-/**
- * Kiekvienai tėvinei kategorijai priskiria pirmą produktą su nuotrauka +
- * skaičiuoja bendrą produktų skaičių.
- *
- * Kategorijos be produktų automatiškai bus atfiltruotos vėliau (productCount = 0).
- */
 function assignHeroImages(parentCategories: any[], products: any[]): any[] {
   return parentCategories.map((cat: any) => {
-    const matchingSlugs = [
-      cat.slug,
-      ...(SUBCATEGORY_MAP[cat.slug] || []),
-    ];
+    const matchingSlugs = [cat.slug, ...(SUBCATEGORY_MAP[cat.slug] || [])];
 
     const firstProduct = products.find(
       (p: any) =>
@@ -134,11 +119,9 @@ export default async function Home() {
     (p: any) => p.images && p.images.length > 0
   );
 
-  // Tėvinės kategorijos su priskirtomis foto
   const parentCategories = categories.filter((c: any) => !c.parentId);
   const categoriesWithImages = assignHeroImages(parentCategories, allProducts);
 
-  // Tik tos kategorijos, kurios turi bent vieną produktą
   const visibleCategories = categoriesWithImages.filter(
     (c: any) => c.productCount > 0
   );
@@ -160,6 +143,9 @@ export default async function Home() {
       <HeroSlider />
 
       <CategoryBento categories={visibleCategories} />
+
+      {/* SPRINT 8.1 — Nauja sekcija */}
+      <ValueProps />
 
       <section
         id="produktai"
