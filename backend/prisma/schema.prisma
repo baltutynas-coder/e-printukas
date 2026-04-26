@@ -6,6 +6,13 @@
 //   - Pridėtas Tag modelis (OCCASION | INDUSTRY tipo žymėjimas)
 //   - Pridėta ProductTag jungiamoji lentelė (many-to-many)
 //   - Product.tags ryšys į ProductTag
+//
+// Sprint D2 pakeitimai:
+//   - Product.category dabar yra @relation("PrimaryCategory") — pagrindinė (SEO canonical)
+//   - Pridėtas Product.additionalCategories — papildomos (Stamina cross-list)
+//   - Pridėtas Category.additionalProducts (atvirkštinis ryšys)
+//   - Naujas ProductCategory M2M modelis — TREMENS, MOSUL ir kt. produktai
+//     pasirodantys keliose kategorijose vienu metu
 
 generator client {
   provider = "prisma-client-js"
@@ -46,7 +53,11 @@ model Category {
   parentId String?    @map("parent_id")
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children Category[] @relation("CategoryTree")
-  products Product[]
+
+  // Sprint D2: skirtos relations — pagrindiniai vs papildomi produktai
+  products            Product[]         @relation("PrimaryCategory")  // pagrindiniai (per Product.categoryId)
+  additionalProducts  ProductCategory[]                               // papildomi (cross-list per M2M)
+
   sortOrder Int       @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
   @@map("categories")
@@ -69,8 +80,13 @@ model Product {
   // Sprint A: Tiekėjas (Roly esami / Stamina nauji)
   supplier    Supplier @default(ROLY)
 
+  // Pagrindinė kategorija (SEO canonical, breadcrumbs)
   categoryId String?   @map("category_id")
-  category   Category? @relation(fields: [categoryId], references: [id])
+  category   Category? @relation("PrimaryCategory", fields: [categoryId], references: [id])
+
+  // Sprint D2: papildomos kategorijos (Stamina cross-list)
+  // TREMENS = Technologijos (primary) + Namams ir dovanos (additional)
+  additionalCategories ProductCategory[]
 
   images     ProductImage[]
   variants   ProductVariant[]
@@ -171,6 +187,34 @@ model ProductTag {
   @@id([productId, tagId])
   @@index([tagId])
   @@map("product_tags")
+}
+
+// ============================================
+// SPRINT D2 — PAPILDOMOS KATEGORIJOS (M2M)
+// ============================================
+//
+// Stamina kainoraštyje 179 produktai pasirodo keliose kategorijose
+// (TREMENS = Technologijos + Namams; MOSUL = Technologijos + Lauko veikla, ir t.t.)
+//
+// - Pagrindinė kategorija saugoma Product.categoryId (canonical SEO + breadcrumbs)
+// - Papildomos kategorijos saugomos čia, M2M
+//
+// Frontend logika kategorijos puslapyje:
+//   PRODUKTAI = (categoryId = X) ∪ (productId IN ProductCategory WHERE categoryId = X)
+// ============================================
+
+model ProductCategory {
+  productId  String   @map("product_id")
+  categoryId String   @map("category_id")
+
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+  @@map("product_categories")
 }
 
 // ============================================

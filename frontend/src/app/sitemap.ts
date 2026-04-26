@@ -21,7 +21,7 @@
 import type { MetadataRoute } from "next";
 
 const BASE_URL = "https://e-printukas.vercel.app";
-const BACKEND_URL = "https://e-printukas-production.up.railway.app/api";
+const BACKEND_URL = "http://localhost:4000/api";
 
 async function getProducts() {
   try {

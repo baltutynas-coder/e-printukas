@@ -44,7 +44,7 @@ const PARENT_OF_SUBCATEGORY: Record<string, string> = {
 async function getProduct(slug: string) {
   try {
     const res = await fetch(
-      `https://e-printukas-production.up.railway.app/api/products/${slug}`,
+      `http://localhost:4000/api/products/${slug}`,
       { cache: "no-store" }
     );
     if (!res.ok) return null;
@@ -58,7 +58,7 @@ async function getProduct(slug: string) {
 async function getCategories() {
   try {
     const res = await fetch(
-      "https://e-printukas-production.up.railway.app/api/categories",
+      "http://localhost:4000/api/categories",
       { cache: "no-store" }
     );
     if (!res.ok) return [];
@@ -72,7 +72,7 @@ async function getCategories() {
 async function getRelatedProducts(categorySlug: string, currentSlug: string) {
   try {
     const res = await fetch(
-      `https://e-printukas-production.up.railway.app/api/products?category=${categorySlug}&limit=10`,
+      `http://localhost:4000/api/products?category=${categorySlug}&limit=10`,
       { cache: "no-store" }
     );
     if (!res.ok) return [];

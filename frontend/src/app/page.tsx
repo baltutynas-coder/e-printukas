@@ -22,7 +22,7 @@ import ValueProps from "@/components/ValueProps";
 async function getProducts() {
   try {
     const res = await fetch(
-      "https://e-printukas-production.up.railway.app/api/products?limit=300",
+      "http://localhost:4000/api/products?supplier=ROLY&limit=300",
       { cache: "no-store" }
     );
     if (!res.ok) throw new Error("Nepavyko gauti produktų");
@@ -37,7 +37,7 @@ async function getProducts() {
 async function getCategories() {
   try {
     const res = await fetch(
-      "https://e-printukas-production.up.railway.app/api/categories",
+      "http://localhost:4000/api/categories",
       { cache: "no-store" }
     );
     if (!res.ok) throw new Error("Nepavyko gauti kategorijų");

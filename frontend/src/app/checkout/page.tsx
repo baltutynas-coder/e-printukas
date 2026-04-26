@@ -42,7 +42,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://e-printukas-production.up.railway.app/api/orders", {
+      const res = await fetch("http://localhost:4000/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

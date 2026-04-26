@@ -19,7 +19,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = "https://e-printukas-production.up.railway.app/api";
+const BACKEND_URL = "http://localhost:4000/api";
 
 /**
  * Bendras handler'is — visi metodai eina per šią funkciją.

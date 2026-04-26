@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 
 const BASE_URL = "https://e-printukas.vercel.app";
 
@@ -16,7 +16,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 async function getCategoryBySlug(slug: string) {
   try {
     const res = await fetch(
-      "https://e-printukas-production.up.railway.app/api/categories",
+      "http://localhost:4000/api/categories",
       { cache: "no-store" }
     );
     if (!res.ok) return null;
